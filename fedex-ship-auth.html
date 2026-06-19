@@ -183,8 +183,8 @@
     </div>
     <div class="step-body" id="body-1">
       <span class="url-tag" id="url-1">POST https://apis-sandbox.fedex.com/oauth/token</span>
-      <div class="field-row"><label>Client ID</label><input type="text" id="s1_client_id" value="l710590f0f484342cb9c30367bccf8a78f"></div>
-      <div class="field-row"><label>Client secret</label><input type="password" id="s1_client_secret" value="b7ae9091eaa54b8d8b15aa75ed400334"></div>
+      <div class="field-row"><label>Client ID</label><input type="text" id="s1_client_id" value=""></div>
+      <div class="field-row"><label>Client secret</label><input type="password" id="s1_client_secret" value=""></div>
       <button class="send-btn" id="btn-1" data-label="Send request" data-loading-label="Requesting…" onclick="runStep1()"><i class="ti ti-send"></i> Send request</button>
       <div id="result-1"></div>
     </div>
@@ -205,12 +205,12 @@
         <div class="auto-box-label"><i class="ti ti-lock"></i> Bearer token <span class="auto-pill"><i class="ti ti-bolt"></i> auto from step 1</span></div>
         <div class="auto-box-val" id="s2_bearer_display">Populated after step 1 completes</div>
       </div>
-      <div class="field-row"><label>Customer name</label><input type="text" id="s2_customerName" value="Org DE Account"></div>
-      <div class="field-row"><label>Street</label><input type="text" id="s2_street" value="HAARLEMER STRASSE 43-45"></div>
-      <div class="field-row"><label>City</label><input type="text" id="s2_city" value="BERLIN"></div>
+      <div class="field-row"><label>Customer name</label><input type="text" id="s2_customerName" value=""></div>
+      <div class="field-row"><label>Street</label><input type="text" id="s2_street" value=""></div>
+      <div class="field-row"><label>City</label><input type="text" id="s2_city" value=""></div>
       <div class="field-row"><label>State / province code</label><input type="text" id="s2_state" value=""></div>
-      <div class="field-row"><label>Postal code</label><input type="text" id="s2_postalCode" value="12359"></div>
-      <div class="field-row"><label>Country code</label><input type="text" id="s2_countryCode" value="DE"></div>
+      <div class="field-row"><label>Postal code</label><input type="text" id="s2_postalCode" value=""></div>
+      <div class="field-row"><label>Country code</label><input type="text" id="s2_countryCode" value=""></div>
       <div class="field-row">
         <label>Residential</label>
         <select id="s2_residential">
@@ -218,7 +218,7 @@
           <option value="true">Yes</option>
         </select>
       </div>
-      <div class="field-row"><label>Account number</label><input type="text" id="s2_accountNumber" value="800668409"></div>
+      <div class="field-row"><label>Account number</label><input type="text" id="s2_accountNumber" value=""></div>
       <button class="send-btn" id="btn-2" data-label="Send request" data-loading-label="Validating…" onclick="runStep2()" disabled><i class="ti ti-send"></i> Send request</button>
       <div id="result-2"></div>
     </div>
@@ -248,10 +248,10 @@
       </div>
       <div class="validation-section" id="section-invoice">
         <span class="url-tag" id="url-3">POST https://apis-sandbox.fedex.com/registration/v2/invoice/keysgeneration</span>
-        <div class="field-row"><label>Invoice number</label><input type="text" id="s3_invoiceNumber" value="234562278"></div>
-        <div class="field-row"><label>Currency</label><input type="text" id="s3_currency" value="USD"></div>
-        <div class="field-row"><label>Date (YYYY-MM-DD)</label><input type="text" id="s3_date" value="2026-05-13"></div>
-        <div class="field-row"><label>Amount</label><input type="text" id="s3_amount" value="234.00"></div>
+        <div class="field-row"><label>Invoice number</label><input type="text" id="s3_invoiceNumber" value=""></div>
+        <div class="field-row"><label>Currency</label><input type="text" id="s3_currency" value=""></div>
+        <div class="field-row"><label>Date (YYYY-MM-DD)</label><input type="text" id="s3_date" value=""></div>
+        <div class="field-row"><label>Amount</label><input type="text" id="s3_amount" value=""></div>
         <button class="send-btn" id="btn-3" data-label="Send request" data-loading-label="Validating…" onclick="runInvoiceValidation()" disabled><i class="ti ti-send"></i> Send request</button>
         <div id="result-3"></div>
       </div>
