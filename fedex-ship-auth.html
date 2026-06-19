@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FedEx Ship Auth — Metafour</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f3; color: #1a1a18; min-height: 100vh; }
+
+  /* Topbar */
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; background: #fff; border-bottom: 1px solid rgba(0,0,0,0.1); }
+  .logos { display: flex; align-items: center; gap: 16px; }
+  .logo-divider { width: 1px; height: 32px; background: rgba(0,0,0,0.12); }
+  .topbar-right { font-size: 12px; color: #888; }
+
+  /* Domain bar */
+  .domain-bar { display: flex; align-items: center; gap: 10px; padding: 10px 24px; background: #efefed; border-bottom: 1px solid rgba(0,0,0,0.08); }
+  .domain-bar label { font-size: 12px; color: #666; white-space: nowrap; display: flex; align-items: center; gap: 5px; }
+  .domain-bar input { flex: 1; font-size: 13px; padding: 6px 10px; border-radius: 7px; border: 1px solid rgba(0,0,0,0.15); background: #fff; color: #1a1a18; font-family: 'Courier New', monospace; max-width: 480px; }
+  .domain-bar input:focus { outline: none; border-color: rgba(0,0,0,0.3); }
+  .env-pills { display: inline-flex; gap: 6px; }
+  .env-pill { padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(0,0,0,0.12); background: #fff; font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; color: #555; }
+  .env-pill.active { background: #0C447C; color: #fff; border-color: #0C447C; }
+  .env-pill:hover { border-color: #0C447C; }
+  .env-badge { font-size: 11px; padding: 3px 9px; border-radius: 4px; font-weight: 500; white-space: nowrap; }
+  .env-sandbox { background: #FAEEDA; color: #854F0B; }
+  .env-prod { background: #EAF3DE; color: #3B6D11; }
+
+  /* Main content */
+  .content { max-width: 680px; margin: 0 auto; padding: 20px 16px 40px; }
+
+  /* Step cards */
+  .step-card { border: 1px solid rgba(0,0,0,0.1); border-radius: 12px; overflow: hidden; margin-bottom: 12px; background: #fff; }
+  .step-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: #f5f5f3; cursor: pointer; user-select: none; }
+  .step-header:hover { background: #efefed; }
+  .step-num { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; flex-shrink: 0; }
+  .step-num.done { background: #EAF3DE; color: #3B6D11; }
+  .step-num.active { background: #E6F1FB; color: #0C447C; }
+  .step-num.locked { background: #fff; border: 1px solid rgba(0,0,0,0.15); color: #aaa; }
+  .step-title { font-size: 14px; font-weight: 500; flex: 1; }
+  .step-status { font-size: 12px; color: #888; }
+  .chevron { font-size: 15px; color: #aaa; transition: transform 0.2s; }
+  .chevron.open { transform: rotate(180deg); }
+
+  /* Status pill */
+  .status-pill { padding: 3px 8px; border-radius: 999px; font-size: 10px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; background: #ececec; color: #666; }
+  .status-pill-ready { background: #E6F1FB; color: #0C447C; }
+  .status-pill-running { background: #FFF3CD; color: #8A6D3B; }
+  .status-pill-error { background: #FCEBEB; color: #A32D2D; }
+  .status-pill-complete { background: #EAF3DE; color: #3B6D11; }
+  .status-pill-locked { background: #F1F1F1; color: #999; }
+
+  /* Step body */
+  .step-body { padding: 1.1rem 1.25rem; border-top: 1px solid rgba(0,0,0,0.08); }
+  .url-tag { font-size: 11px; font-family: 'Courier New', monospace; color: #666; padding: 5px 8px; background: #f5f5f3; border-radius: 4px; margin-bottom: 14px; display: block; word-break: break-all; }
+
+  /* Fields */
+  .field-row { margin-bottom: 11px; }
+  .field-row label { display: block; font-size: 12px; color: #666; margin-bottom: 3px; }
+  .field-row input, .field-row select { width: 100%; font-size: 13px; padding: 7px 10px; border-radius: 7px; border: 1px solid rgba(0,0,0,0.15); background: #f5f5f3; color: #1a1a18; font-family: inherit; }
+  .field-row input:focus, .field-row select:focus { outline: none; border-color: rgba(0,0,0,0.3); background: #fff; }
+
+  /* Auto boxes */
+  .auto-box { background: #f5f5f3; border: 1px solid rgba(0,0,0,0.1); border-radius: 7px; padding: 9px 12px; margin-bottom: 10px; }
+  .auto-box-label { font-size: 11px; color: #888; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .auto-pill { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #E6F1FB; color: #0C447C; margin-left: 5px; }
+  .auto-box-val { font-family: 'Courier New', monospace; font-size: 12px; color: #aaa; font-style: italic; }
+  .auto-box-val.populated { color: #1a1a18; font-style: normal; }
+
+  /* Buttons */
+  .send-btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 18px; background: #fff; border: 1px solid rgba(0,0,0,0.2); border-radius: 7px; color: #1a1a18; font-size: 13px; cursor: pointer; margin-top: 6px; font-family: inherit; }
+  .send-btn:hover { background: #f5f5f3; }
+  .send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  /* File warning */
+  .file-warning { background: #FCEBEB; color: #7A1F1F; border: 1px solid #F3C1C1; padding: 12px 18px; margin: 16px 24px; border-radius: 10px; font-size: 13px; line-height: 1.5; }
+  .file-warning strong { display: block; font-size: 14px; margin-bottom: 4px; }
+
+  /* Validation choice */
+  .validation-toggle { display: flex; gap: 8px; margin: 18px 0 14px; }
+  .toggle-btn { flex: 1; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(12,68,124,0.15); background: #f5f5f3; color: #0C447C; font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.2s, border-color 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .toggle-btn.active { background: #0C447C; color: #fff; border-color: #0C447C; }
+  .toggle-btn:hover { border-color: #0C447C; }
+  .validation-section { border: 1px solid rgba(0,0,0,0.08); border-radius: 10px; padding: 16px; background: #fff; }
+  .pin-options { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .pin-option { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #333; background: #f5f5f3; padding: 7px 12px; border-radius: 999px; cursor: pointer; border: 1px solid transparent; transition: border-color 0.2s, background 0.2s; }
+  .pin-option input { accent-color: #0C447C; }
+  .pin-option:hover { border-color: #0C447C; }
+
+  /* Views */
+  .view-tabs { display: flex; gap: 10px; padding: 0 24px; margin: 18px 0 10px; }
+  .view-tab { padding: 9px 16px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.12); background: #f5f5f3; color: #0C447C; font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.2s, border-color 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+  .view-tab:hover { border-color: #0C447C; }
+  .view-tab.active { background: #0C447C; color: #fff; border-color: #0C447C; }
+
+  /* Carousel */
+  .carousel { position: relative; overflow: hidden; margin: 0 24px 16px; border-radius: 12px; }
+  .carousel-track { display: flex; transition: transform 0.35s ease; }
+  .carousel-slide { min-width: 100%; box-sizing: border-box; padding: 0 2px 20px; }
+  .carousel-controls { display: flex; justify-content: space-between; align-items: center; margin: 10px 24px 18px; }
+  .carousel-btn { padding: 8px 14px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.12); background: #fff; color: #0C447C; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .carousel-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .carousel-btn:hover:not(:disabled) { border-color: #0C447C; }
+  .carousel-indicators { display: flex; justify-content: center; gap: 6px; margin-bottom: 28px; }
+  .carousel-indicators button { width: 10px; height: 10px; border-radius: 50%; border: none; background: rgba(12,68,124,0.2); cursor: pointer; }
+  .carousel-indicators button.active { background: #0C447C; }
+  .slide { display: none; transition: opacity 0.25s ease; }
+  .slide.active-slide { display: block; }
+  .carousel-progress { font-size: 12px; color: #555; letter-spacing: 0.02em; }
+
+  /* Logs */
+  .logs-container { padding: 0 24px 32px; }
+  .logs-list { display: flex; flex-direction: column; gap: 10px; }
+  .log-entry { border: 1px solid rgba(0,0,0,0.08); border-radius: 8px; background: #fff; padding: 12px 14px; }
+  .log-entry-header { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #0C447C; margin-bottom: 6px; }
+  .log-entry-body { font-family: 'Courier New', monospace; font-size: 11px; white-space: pre-wrap; word-break: break-word; color: #1a1a18; }
+  .log-tags { display: inline-flex; gap: 6px; margin-left: auto; }
+  .log-tag { font-size: 10px; padding: 2px 6px; border-radius: 999px; background: #f5f5f3; color: #555; text-transform: uppercase; letter-spacing: 0.04em; }
+  .logs-empty { padding: 20px; text-align: center; font-size: 12px; color: #777; background: #f5f5f3; border-radius: 8px; border: 1px dashed rgba(0,0,0,0.1); }
+
+  /* Output card */
+  .output-card { background: #EAF3DE; border: 1px solid #C0DD97; border-radius: 12px; padding: 1rem 1.1rem; margin-top: 12px; }
+  .output-title { font-size: 13px; font-weight: 500; color: #27500A; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+  .output-row { margin-bottom: 14px; }
+  .output-row:last-child { margin-bottom: 0; }
+  .output-key { font-size: 11px; color: #3B6D11; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .output-val { font-family: 'Courier New', monospace; font-size: 15px; font-weight: 600; color: #27500A; word-break: break-all; background: #fff; border-radius: 7px; padding: 9px 12px; border: 1px solid #C0DD97; }
+  .copy-btn { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 4px 10px; border-radius: 6px; border: 1px solid #C0DD97; background: transparent; color: #3B6D11; cursor: pointer; margin-top: 6px; font-family: inherit; }
+  .copy-btn:hover { background: #C0DD97; }
+
+  /* Result mini box */
+  .result-mini { background: #f5f5f3; border: 1px solid rgba(0,0,0,0.1); border-radius: 7px; padding: 9px 12px; margin-top: 10px; }
+  .result-mini-label { font-size: 11px; color: #3B6D11; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .result-mini-val { font-family: 'Courier New', monospace; font-size: 12px; color: #1a1a18; word-break: break-all; }
+  .result-mini-note { font-size: 11px; color: #7A1F1F; margin-top: 6px; line-height: 1.4; }
+</style>
+</head>
+<body>
+
+<div class="file-warning" id="file-warning" style="display:none">
+  <strong>Serve this page via the Node helper</strong>
+  Open <code>http://localhost:8010/</code> in your browser after running <code>npm start</code>. Loading the HTML directly from the file system (origin <code>file://</code>) blocks proxy requests, so the FedEx calls will fail.
+</div>
+
+<div class="topbar">
+  <div class="logos">
+    <img src="data:image/png;base64,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" alt="Metafour" style="height:36px;object-fit:contain">
+    <div class="logo-divider"></div>
+    <img src="data:image/png;base64,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" alt="FedEx" style="height:30px;object-fit:contain">
+  </div>
+  <span class="topbar-right">Powered by Metafour</span>
+</div>
+
+<div class="domain-bar">
+  <label><i class="ti ti-world"></i> API base URL</label>
+  <input type="text" id="domain-input" value="https://apis-sandbox.fedex.com" oninput="updateDomain(this.value)">
+  <div class="env-pills">
+    <button type="button" class="env-pill active" id="pill-sandbox" onclick="setEnvironment('sandbox')"><i class="ti ti-plant"></i> Sandbox</button>
+    <button type="button" class="env-pill" id="pill-production" onclick="setEnvironment('production')"><i class="ti ti-building"></i> Production</button>
+  </div>
+  <span class="env-badge env-sandbox" id="env-badge">Sandbox</span>
+</div>
+
+<div class="view-tabs">
+  <button type="button" class="view-tab active" id="tab-workflow" onclick="switchView('workflow')"><i class="ti ti-rocket"></i> Workflow</button>
+  <button type="button" class="view-tab" id="tab-logs" onclick="switchView('logs')"><i class="ti ti-clipboard-list"></i> Logs</button>
+</div>
+
+<div id="workflow-view">
+<div class="carousel">
+<div class="content">
+
+  <!-- STEP 1 -->
+  <div class="step-card slide active-slide" data-slide="0">
+    <div class="step-header" onclick="toggleStep(1)">
+      <div class="step-num active" id="num-1">1</div>
+      <div class="step-title">Parent bearer token</div>
+      <span class="status-pill status-pill-ready" id="badge-1">Ready</span>
+      <span class="step-status" id="status-1">Start here</span>
+      <i class="ti ti-chevron-down chevron open" id="chev-1"></i>
+    </div>
+    <div class="step-body" id="body-1">
+      <span class="url-tag" id="url-1">POST https://apis-sandbox.fedex.com/oauth/token</span>
+      <div class="field-row"><label>Client ID</label><input type="text" id="s1_client_id" value="l710590f0f484342cb9c30367bccf8a78f"></div>
+      <div class="field-row"><label>Client secret</label><input type="password" id="s1_client_secret" value="b7ae9091eaa54b8d8b15aa75ed400334"></div>
+      <button class="send-btn" id="btn-1" data-label="Send request" data-loading-label="Requesting…" onclick="runStep1()"><i class="ti ti-send"></i> Send request</button>
+      <div id="result-1"></div>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step-card slide" data-slide="1">
+    <div class="step-header" onclick="toggleStep(2)">
+      <div class="step-num locked" id="num-2">2</div>
+      <div class="step-title">Child address validation</div>
+      <span class="status-pill status-pill-locked" id="badge-2">Locked</span>
+      <span class="step-status" id="status-2">Waiting for step 1</span>
+      <i class="ti ti-chevron-down chevron" id="chev-2"></i>
+    </div>
+    <div class="step-body" id="body-2" style="display:none">
+      <span class="url-tag" id="url-2">POST https://apis-sandbox.fedex.com/registration/v2/address/keysgeneration</span>
+      <div class="auto-box">
+        <div class="auto-box-label"><i class="ti ti-lock"></i> Bearer token <span class="auto-pill"><i class="ti ti-bolt"></i> auto from step 1</span></div>
+        <div class="auto-box-val" id="s2_bearer_display">Populated after step 1 completes</div>
+      </div>
+      <div class="field-row"><label>Customer name</label><input type="text" id="s2_customerName" value="Org DE Account"></div>
+      <div class="field-row"><label>Street</label><input type="text" id="s2_street" value="HAARLEMER STRASSE 43-45"></div>
+      <div class="field-row"><label>City</label><input type="text" id="s2_city" value="BERLIN"></div>
+      <div class="field-row"><label>State / province code</label><input type="text" id="s2_state" value=""></div>
+      <div class="field-row"><label>Postal code</label><input type="text" id="s2_postalCode" value="12359"></div>
+      <div class="field-row"><label>Country code</label><input type="text" id="s2_countryCode" value="DE"></div>
+      <div class="field-row">
+        <label>Residential</label>
+        <select id="s2_residential">
+          <option value="false">No</option>
+          <option value="true">Yes</option>
+        </select>
+      </div>
+      <div class="field-row"><label>Account number</label><input type="text" id="s2_accountNumber" value="800668409"></div>
+      <button class="send-btn" id="btn-2" data-label="Send request" data-loading-label="Validating…" onclick="runStep2()" disabled><i class="ti ti-send"></i> Send request</button>
+      <div id="result-2"></div>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step-card slide" data-slide="2">
+    <div class="step-header" onclick="toggleStep(3)">
+      <div class="step-num locked" id="num-3">3</div>
+      <div class="step-title">Validation options</div>
+      <span class="status-pill status-pill-locked" id="badge-3">Locked</span>
+      <span class="step-status" id="status-3">Waiting for step 2</span>
+      <i class="ti ti-chevron-down chevron" id="chev-3"></i>
+    </div>
+    <div class="step-body" id="body-3" style="display:none">
+      <div class="auto-box" style="margin-bottom:8px">
+        <div class="auto-box-label"><i class="ti ti-lock"></i> Bearer token <span class="auto-pill"><i class="ti ti-bolt"></i> auto from step 1</span></div>
+        <div class="auto-box-val" id="s3_bearer_display">Populated after step 1 completes</div>
+      </div>
+      <div class="auto-box">
+        <div class="auto-box-label"><i class="ti ti-key"></i> accountAuthToken header <span class="auto-pill"><i class="ti ti-bolt"></i> auto from step 2</span></div>
+        <div class="auto-box-val" id="s3_authtoken_display">Populated after step 2 completes</div>
+      </div>
+      <div class="validation-toggle">
+        <button type="button" class="toggle-btn active" id="mode-invoice-btn" onclick="setValidationMode('invoice')"><i class="ti ti-file-description"></i> Invoice validation</button>
+        <button type="button" class="toggle-btn" id="mode-pin-btn" onclick="setValidationMode('pin')"><i class="ti ti-key"></i> PIN validation</button>
+      </div>
+      <div class="validation-section" id="section-invoice">
+        <span class="url-tag" id="url-3">POST https://apis-sandbox.fedex.com/registration/v2/invoice/keysgeneration</span>
+        <div class="field-row"><label>Invoice number</label><input type="text" id="s3_invoiceNumber" value="234562278"></div>
+        <div class="field-row"><label>Currency</label><input type="text" id="s3_currency" value="USD"></div>
+        <div class="field-row"><label>Date (YYYY-MM-DD)</label><input type="text" id="s3_date" value="2026-05-13"></div>
+        <div class="field-row"><label>Amount</label><input type="text" id="s3_amount" value="234.00"></div>
+        <button class="send-btn" id="btn-3" data-label="Send request" data-loading-label="Validating…" onclick="runInvoiceValidation()" disabled><i class="ti ti-send"></i> Send request</button>
+        <div id="result-3"></div>
+      </div>
+      <div class="validation-section" id="section-pin" style="display:none">
+        <span class="url-tag" id="url-3-pin">POST https://apis-sandbox.fedex.com/registration/v2/customerkeys/pingeneration</span>
+        <p style="font-size:12px; color:#555; line-height:1.5; margin:0 0 8px;">Choose how FedEx should deliver the MFA PIN for this customer.</p>
+        <div class="pin-options">
+          <label class="pin-option"><input type="radio" name="pin-option" value="SMS" checked>SMS</label>
+          <label class="pin-option"><input type="radio" name="pin-option" value="EMAIL">Email</label>
+          <label class="pin-option"><input type="radio" name="pin-option" value="CALL">Phone call</label>
+        </div>
+        <button class="send-btn" id="btn-3-pin" data-label="Generate PIN" data-loading-label="Generating…" onclick="runPinGeneration()" disabled><i class="ti ti-send"></i> Generate PIN</button>
+        <div id="result-3-pin"></div>
+        <div class="field-row" style="margin-top:14px">
+          <label>Secure code PIN</label><input type="text" id="pin-secure-code" placeholder="Enter PIN received from FedEx">
+        </div>
+        <button class="send-btn" id="btn-3-pin-validate" data-label="Validate PIN" data-loading-label="Validating…" onclick="runPinValidation()" disabled><i class="ti ti-send"></i> Validate PIN</button>
+        <div id="result-3-pin-validate"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</div>
+
+<div class="carousel-controls">
+  <button type="button" class="carousel-btn" id="carousel-prev" onclick="prevSlide()" disabled><i class="ti ti-arrow-left"></i> Previous</button>
+  <div class="carousel-progress" id="carousel-progress">Step 1 of 3</div>
+  <button type="button" class="carousel-btn" id="carousel-next" onclick="nextSlide()">Next <i class="ti ti-arrow-right"></i></button>
+</div>
+<div class="carousel-indicators" id="carousel-indicators"></div>
+</div>
+
+<div id="logs-view" style="display:none;">
+  <div class="logs-container">
+    <div class="view-tabs" style="padding:0; margin-bottom:12px; display:flex; gap:10px;">
+      <label class="pin-option" style="padding:6px 10px; cursor:pointer;">
+        <input type="checkbox" name="log-filter" value="request" checked>Requests
+      </label>
+      <label class="pin-option" style="padding:6px 10px; cursor:pointer;">
+        <input type="checkbox" name="log-filter" value="response" checked>Responses
+      </label>
+      <button type="button" class="carousel-btn" style="margin-left:auto;" onclick="clearLogs()"><i class="ti ti-trash"></i> Clear</button>
+    </div>
+    <div id="logs-list" class="logs-empty">No activity yet.</div>
+  </div>
+</div>
+
+<script>
+let bearerToken = "", accountAuthToken = "", domain = "https://apis-sandbox.fedex.com";
+let openSteps = { 1: true, 2: false, 3: false };
+const proxyBase = "/proxy?url=";
+let validationMode = "invoice";
+const isFileOrigin = window.location.protocol === "file:";
+const stepTitles = ["Parent bearer token", "Child address validation", "Validation options"];
+const logs = [];
+const slides = Array.from(document.querySelectorAll(".slide"));
+const slideCompletion = slides.length ? Array(slides.length).fill(false) : [];
+let currentSlide = slides.findIndex(slide => slide.classList.contains("active-slide"));
+if (currentSlide === -1) currentSlide = 0;
+const indicatorsContainer = document.getElementById("carousel-indicators");
+const prevBtn = document.getElementById("carousel-prev");
+const nextBtn = document.getElementById("carousel-next");
+
+(function initOriginWarning() {
+  const banner = document.getElementById("file-warning");
+  if (banner) {
+    banner.style.display = isFileOrigin ? "block" : "none";
+  }
+})();
+
+async function sendRequest(url, options) {
+  if (isFileOrigin) {
+    throw new Error("This page must be served from the Node helper at http://localhost:8010/");
+  }
+  const targetPath = proxyBase + encodeURIComponent(url);
+  const targetAbsolute = window.location.origin + targetPath;
+  const opts = Object.assign({}, options || {});
+  const rawBody = Object.prototype.hasOwnProperty.call(options || {}, "rawBody") ? options.rawBody : opts.body;
+  if (Object.prototype.hasOwnProperty.call(opts, "rawBody")) delete opts.rawBody;
+  const requestInfo = {
+    originalUrl: url,
+    proxyUrl: targetAbsolute,
+    method: (opts.method || "GET").toUpperCase(),
+    headers: Object.assign({}, opts.headers),
+    body: opts.body,
+    displayBody: rawBody
+  };
+  try {
+    const response = await fetch(targetPath, opts);
+    response._fedexProxyTarget = targetAbsolute;
+    response._fedexRequestInfo = requestInfo;
+    return response;
+  } catch (err) {
+    const error = new Error(err && err.message ? err.message : "Failed to fetch");
+    error.target = targetAbsolute;
+    error.requestInfo = requestInfo;
+    throw error;
+  }
+}
+
+function formatNetworkError(err, url) {
+  const fallback = window.location.origin + proxyBase + encodeURIComponent(url);
+  const target = (err && err.target) ? err.target : fallback;
+  const message = err && err.message ? err.message : "Failed to fetch";
+  const extra = isFileOrigin
+    ? "\nTip: Open http://localhost:8010/ instead of loading the HTML from disk."
+    : "\nTip: Ensure the Node proxy server is running.";
+  return "Network error: " + message + "\nTarget: " + target + extra;
+}
+
+function updateDomain(v) {
+  domain = v.trim().replace(/\/$/, "");
+  const isSandbox = domain.includes("sandbox");
+  const badge = document.getElementById("env-badge");
+  badge.textContent = isSandbox ? "Sandbox" : "Production";
+  badge.className = "env-badge " + (isSandbox ? "env-sandbox" : "env-prod");
+  const input = document.getElementById("domain-input");
+  if (input && input.value.trim().replace(/\/$/, "") !== domain) {
+    input.value = domain;
+  }
+  updateEnvPills(isSandbox ? "sandbox" : "production");
+  document.getElementById("url-1").textContent = "POST " + domain + "/oauth/token";
+  document.getElementById("url-2").textContent = "POST " + domain + "/registration/v2/address/keysgeneration";
+  document.getElementById("url-3").textContent = "POST " + domain + "/registration/v2/invoice/keysgeneration";
+  const pinUrl = document.getElementById("url-3-pin");
+  if (pinUrl) pinUrl.textContent = "POST " + domain + "/registration/v2/customerkeys/pingeneration";
+}
+
+function updateEnvPills(env) {
+  const sandboxPill = document.getElementById("pill-sandbox");
+  const prodPill = document.getElementById("pill-production");
+  if (sandboxPill) sandboxPill.classList.toggle("active", env === "sandbox");
+  if (prodPill) prodPill.classList.toggle("active", env === "production");
+}
+
+function toggleStep(n) {
+  openSteps[n] = !openSteps[n];
+  document.getElementById("body-" + n).style.display = openSteps[n] ? "block" : "none";
+  const chev = document.getElementById("chev-" + n);
+  chev.classList.toggle("open", openSteps[n]);
+}
+
+function openStep(n) {
+  if (!openSteps[n]) toggleStep(n);
+}
+
+const statusLabels = {
+  locked: "Locked",
+  ready: "Ready",
+  running: "In progress",
+  error: "Error",
+  complete: "Complete"
+};
+
+function setStepState(step, state, text) {
+  const badge = document.getElementById("badge-" + step);
+  if (badge) {
+    badge.textContent = statusLabels[state] || state;
+    badge.className = "status-pill status-pill-" + (state || "ready");
+  }
+  const status = document.getElementById("status-" + step);
+  if (status && typeof text === "string") status.textContent = text;
+  const num = document.getElementById("num-" + step);
+  if (num) {
+    if (state === "complete") num.className = "step-num done";
+    else if (state === "locked") num.className = "step-num locked";
+    else num.className = "step-num active";
+  }
+}
+
+function resetSlide(idx) {
+  if (idx < slideCompletion.length) {
+  slideCompletion[idx] = false;
+  if (idx === currentSlide) updateCarousel();
+  if (idx + 1 < slideCompletion.length) {
+    slideCompletion[idx + 1] = false;
+  }
+  }
+}
+
+function markSlideComplete(idx, autoAdvance = false) {
+  if (idx < slideCompletion.length) {
+    slideCompletion[idx] = true;
+    updateCarousel();
+    if (autoAdvance && idx < slides.length - 1) {
+      setTimeout(() => goToSlide(idx + 1), 250);
+    }
+  }
+}
+
+function isWorkflowVisible() {
+  const view = document.getElementById("workflow-view");
+  return view && view.style.display !== "none";
+}
+
+function getStepContext(step, suffix) {
+  if (step === 3) {
+    if (suffix === "-pin") return "PIN generation";
+    if (suffix === "-pin-validate") return "PIN validation";
+    return "Invoice validation";
+  }
+  return stepTitles[step - 1] || "Step " + step;
+}
+
+function addLog(entry) {
+  logs.push(Object.assign({ timestamp: new Date() }, entry));
+  if (logs.length > 300) logs.shift();
+  renderLogs();
+}
+
+function clearLogs() {
+  logs.length = 0;
+  renderLogs();
+}
+
+function setEnvironment(env) {
+  const url = env === "production" ? "https://apis.fedex.com" : "https://apis-sandbox.fedex.com";
+  const input = document.getElementById("domain-input");
+  if (input) input.value = url;
+  updateDomain(url);
+}
+
+function renderLogs() {
+  const container = document.getElementById("logs-list");
+  if (!container) return;
+  if (!logs.length) {
+    container.className = "logs-empty";
+    container.textContent = "No activity yet.";
+    return;
+  }
+  const filterInputs = Array.from(document.querySelectorAll('input[name="log-filter"]'));
+  const activeKinds = filterInputs.filter(el => el.checked).map(el => el.value);
+  if (!activeKinds.length) {
+    container.className = "logs-empty";
+    container.textContent = "Enable at least one filter to see log entries.";
+    return;
+  }
+  const filtered = logs.filter(log => activeKinds.includes(log.kind));
+  if (!filtered.length) {
+    container.className = "logs-empty";
+    container.textContent = "No entries match the current filter.";
+    return;
+  }
+  container.className = "logs-list";
+  container.innerHTML = filtered.map(log => {
+    const time = log.timestamp.toLocaleTimeString();
+    const context = getStepContext(log.step, log.suffix || "");
+    const direction = log.kind === "request" ? "Request" : "Response";
+    const tags = [
+      `<span class="log-tag">${esc(direction)}</span>`,
+      `<span class="log-tag">Step ${log.step}</span>`,
+      `<span class="log-tag">${esc(context)}</span>`
+    ];
+    if (log.kind === "request" && log.method) tags.push(`<span class="log-tag">${esc(log.method)}</span>`);
+    if (log.kind === "response" && typeof log.status !== "undefined") {
+      tags.push(`<span class="log-tag">${esc(String(log.status))}${log.ok ? " OK" : " ERR"}</span>`);
+    }
+    const headerHtml = `<div class="log-entry-header"><strong>${esc(time)}</strong><span>${esc(log.url || "")}</span><span class="log-tags">${tags.join("")}</span></div>`;
+    const pieces = [];
+    if (log.kind === "request" && log.proxyUrl && log.proxyUrl !== log.url) {
+      pieces.push("Proxy target:\n" + log.proxyUrl);
+    }
+    if (log.kind === "request" && log.headers) pieces.push("Headers:\n" + log.headers);
+    if (log.body) pieces.push(log.kind === "request" ? "Body:\n" + log.body : log.body);
+    const bodyText = pieces.length ? pieces.join("\n\n") : "(empty)";
+    return `<div class="log-entry">${headerHtml}<div class="log-entry-body">${esc(bodyText)}</div></div>`;
+  }).join("");
+}
+
+function initIndicators() {
+  if (!indicatorsContainer) return;
+  if (!slides.length) {
+    indicatorsContainer.innerHTML = "";
+    return;
+  }
+  indicatorsContainer.innerHTML = slides.map((_, idx) =>
+    `<button type="button" data-index="${idx}" onclick="goToSlide(${idx})"></button>`
+  ).join("");
+  updateIndicators();
+}
+
+function updateIndicators() {
+  if (!indicatorsContainer) return;
+  const buttons = indicatorsContainer.querySelectorAll("button");
+  buttons.forEach((btn, idx) => btn.classList.toggle("active", idx === currentSlide));
+}
+
+function updateCarousel() {
+  if (!slides.length) {
+    if (prevBtn) prevBtn.disabled = true;
+    if (nextBtn) nextBtn.disabled = true;
+    updateIndicators();
+    return;
+  }
+  if (currentSlide >= slides.length) currentSlide = slides.length - 1;
+  if (currentSlide < 0) currentSlide = 0;
+  slides.forEach((slide, idx) => {
+    slide.classList.toggle("active-slide", idx === currentSlide);
+  });
+  const canAdvance = slideCompletion[currentSlide] === true;
+  if (prevBtn) {
+    prevBtn.disabled = currentSlide === 0;
+    prevBtn.innerHTML = '<i class="ti ti-arrow-left"></i> Back';
+  }
+  if (nextBtn) {
+    if (currentSlide === slides.length - 1) {
+      nextBtn.innerHTML = '<i class="ti ti-notes"></i> View logs';
+      nextBtn.disabled = !canAdvance;
+    } else if (canAdvance) {
+      nextBtn.innerHTML = 'Next <i class="ti ti-arrow-right"></i>';
+      nextBtn.disabled = false;
+    } else {
+      nextBtn.innerHTML = '<i class="ti ti-lock"></i> Complete this step';
+      nextBtn.disabled = true;
+    }
+  }
+  const progressEl = document.getElementById("carousel-progress");
+  if (progressEl) progressEl.textContent = `Step ${currentSlide + 1} of ${slides.length}`;
+  updateIndicators();
+  openStep(currentSlide + 1);
+}
+
+function goToSlide(idx) {
+  if (idx < 0 || idx >= slides.length) return;
+  currentSlide = idx;
+  updateCarousel();
+  openStep(idx + 1);
+}
+
+function nextSlide() {
+  if (currentSlide === slides.length - 1) return;
+  if (slideCompletion[currentSlide]) goToSlide(currentSlide + 1);
+}
+
+function prevSlide() {
+  if (currentSlide > 0) goToSlide(currentSlide - 1);
+}
+
+function switchView(view) {
+  const workflowView = document.getElementById("workflow-view");
+  const logsView = document.getElementById("logs-view");
+  const workflowTab = document.getElementById("tab-workflow");
+  const logsTab = document.getElementById("tab-logs");
+  const showWorkflow = view !== "logs";
+  if (workflowView) workflowView.style.display = showWorkflow ? "block" : "none";
+  if (logsView) logsView.style.display = showWorkflow ? "none" : "block";
+  if (workflowTab) workflowTab.classList.toggle("active", showWorkflow);
+  if (logsTab) logsTab.classList.toggle("active", !showWorkflow);
+  if (showWorkflow) {
+    updateCarousel();
+  } else {
+    renderLogs();
+  }
+}
+
+function setValidationMode(mode) {
+  validationMode = mode;
+  const invoiceBtn = document.getElementById("mode-invoice-btn");
+  const pinBtn = document.getElementById("mode-pin-btn");
+  const invoiceSection = document.getElementById("section-invoice");
+  const pinSection = document.getElementById("section-pin");
+  if (invoiceBtn) invoiceBtn.classList.toggle("active", mode === "invoice");
+  if (pinBtn) pinBtn.classList.toggle("active", mode === "pin");
+  if (invoiceSection) invoiceSection.style.display = mode === "invoice" ? "block" : "none";
+  if (pinSection) pinSection.style.display = mode === "pin" ? "block" : "none";
+  const status = document.getElementById("status-3");
+  const num = document.getElementById("num-3");
+  if (status && num && num.classList.contains("active")) {
+    status.textContent = mode === "invoice" ? "Invoice validation ready" : "PIN validation ready";
+  }
+}
+
+function esc(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function mask(t) {
+  if (!t || t.length < 12) return t;
+  return t.slice(0, 6) + "••••••••" + t.slice(-4);
+}
+
+function showResp(n, status, ok, body, target, suffix = "") {
+  addLog({
+    kind: "response",
+    step: n,
+    suffix,
+    status,
+    ok,
+    url: target || "",
+    body: typeof body === "string" ? body : String(body || "")
+  });
+}
+
+function showRequest(n, info, suffix = "") {
+  if (!info) return;
+  const headers = info.headers || {};
+  const headerLines = Object.keys(headers).length
+    ? Object.entries(headers).map(([k, v]) => k + ": " + v).join("\n")
+    : "";
+  let bodyText = "";
+  if (typeof info.displayBody === "string") {
+    bodyText = info.displayBody;
+  } else if (info.displayBody) {
+    try { bodyText = JSON.stringify(info.displayBody, null, 2); } catch { bodyText = String(info.displayBody); }
+  } else if (typeof info.body === "string") {
+    bodyText = info.body;
+  }
+  addLog({
+    kind: "request",
+    step: n,
+    suffix,
+    method: info.method || "GET",
+    url: info.originalUrl || info.proxyUrl || "",
+    proxyUrl: info.proxyUrl || "",
+    headers: headerLines,
+    body: typeof bodyText === "string" ? bodyText : String(bodyText || "")
+  });
+}
+
+function setLoading(n, loading, suffix = "") {
+  const btn = document.getElementById("btn-" + n + suffix);
+  if (!btn) return;
+  const idleLabel = btn.dataset.label || "Send request";
+  const loadingLabel = btn.dataset.loadingLabel || "Sending…";
+  btn.disabled = loading;
+  btn.innerHTML = loading
+    ? '<i class="ti ti-loader"></i> ' + esc(loadingLabel)
+    : '<i class="ti ti-send"></i> ' + esc(idleLabel);
+}
+
+async function runStep1() {
+  resetSlide(0);
+  resetSlide(1);
+  resetSlide(2);
+  setStepState(1, "running", "Request in progress…");
+  setStepState(2, "locked", "Waiting for step 1");
+  setStepState(3, "locked", "Waiting for step 2");
+  const btn2 = document.getElementById("btn-2");
+  if (btn2) btn2.disabled = true;
+  const btn3 = document.getElementById("btn-3");
+  if (btn3) btn3.disabled = true;
+  const pinBtn = document.getElementById("btn-3-pin");
+  if (pinBtn) pinBtn.disabled = true;
+  const pinValidateBtn = document.getElementById("btn-3-pin-validate");
+  if (pinValidateBtn) pinValidateBtn.disabled = true;
+  const result1 = document.getElementById("result-1");
+  if (result1) result1.innerHTML = "";
+  const result2 = document.getElementById("result-2");
+  if (result2) result2.innerHTML = "";
+  const result3 = document.getElementById("result-3");
+  if (result3) result3.innerHTML = "";
+  const result3Pin = document.getElementById("result-3-pin");
+  if (result3Pin) result3Pin.innerHTML = "";
+  const result3PinValidate = document.getElementById("result-3-pin-validate");
+  if (result3PinValidate) result3PinValidate.innerHTML = "";
+  setLoading(1, true);
+  const url = domain + "/oauth/token";
+  const body = new URLSearchParams({
+    client_id: document.getElementById("s1_client_id").value,
+    client_secret: document.getElementById("s1_client_secret").value,
+    grant_type: "client_credentials"
+  });
+  const bodySend = body.toString();
+  const bodyDisplay = Array.from(body.entries()).map(([k, v]) => k + "=" + v).join("\n");
+  showRequest(1, null);
+  try {
+    const res = await sendRequest(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: bodySend,
+      rawBody: bodyDisplay
+    });
+    const text = await res.text();
+    let pretty, parsed;
+    try { parsed = JSON.parse(text); pretty = JSON.stringify(parsed, null, 2); } catch { pretty = text; }
+    showRequest(1, res._fedexRequestInfo);
+    const via = res._fedexProxyTarget && res._fedexProxyTarget !== url ? res._fedexProxyTarget : null;
+    showResp(1, res.status, res.ok, pretty, via);
+    if (res.ok && parsed && parsed.access_token) {
+      bearerToken = parsed.access_token;
+      document.getElementById("result-1").innerHTML =
+        '<div class="result-mini"><div class="result-mini-label"><i class="ti ti-check"></i> Bearer token received</div>' +
+        '<div class="result-mini-val">' + mask(bearerToken) + "</div></div>";
+      setStepState(1, "complete", "Complete");
+      unlockStep2();
+      markSlideComplete(0, true);
+    } else {
+      setStepState(1, "error", "Unexpected response — see logs");
+      setStepState(2, "locked", "Waiting for step 1");
+      setStepState(3, "locked", "Waiting for step 2");
+    }
+  } catch (e) {
+    showRequest(1, e.requestInfo);
+    const viaErr = e.requestInfo && e.requestInfo.proxyUrl && e.requestInfo.proxyUrl !== url ? e.requestInfo.proxyUrl : null;
+    showResp(1, 0, false, formatNetworkError(e, url), viaErr);
+    setStepState(1, "error", "Error — see logs");
+    setStepState(2, "locked", "Waiting for step 1");
+    setStepState(3, "locked", "Waiting for step 2");
+  }
+  setLoading(1, false);
+}
+
+function unlockStep2() {
+  const d = document.getElementById("s2_bearer_display");
+  if (d) {
+    d.textContent = mask(bearerToken);
+    d.className = "auto-box-val populated";
+  }
+  const btn2 = document.getElementById("btn-2");
+  if (btn2) btn2.disabled = false;
+  const result2 = document.getElementById("result-2");
+  if (result2) result2.innerHTML = "";
+  openStep(2);
+  resetSlide(1);
+  setStepState(2, "ready", "Ready to continue");
+}
+
+async function runStep2() {
+  resetSlide(1);
+  resetSlide(2);
+  setStepState(2, "running", "Request in progress…");
+  setStepState(3, "locked", "Waiting for step 2");
+  const btn3 = document.getElementById("btn-3");
+  if (btn3) btn3.disabled = true;
+  const pinBtn = document.getElementById("btn-3-pin");
+  if (pinBtn) pinBtn.disabled = true;
+  const pinValidateBtn = document.getElementById("btn-3-pin-validate");
+  if (pinValidateBtn) pinValidateBtn.disabled = true;
+  const pinInput = document.getElementById("pin-secure-code");
+  if (pinInput) pinInput.value = "";
+  const result2 = document.getElementById("result-2");
+  if (result2) result2.innerHTML = "";
+  const result3 = document.getElementById("result-3");
+  if (result3) result3.innerHTML = "";
+  const result3Pin = document.getElementById("result-3-pin");
+  if (result3Pin) result3Pin.innerHTML = "";
+  const result3PinValidate = document.getElementById("result-3-pin-validate");
+  if (result3PinValidate) result3PinValidate.innerHTML = "";
+  setLoading(2, true);
+  const url = domain + "/registration/v2/address/keysgeneration";
+  const payload = {
+    customerName: document.getElementById("s2_customerName").value,
+    address: {
+      streetLines: [document.getElementById("s2_street").value],
+      city: document.getElementById("s2_city").value,
+      stateOrProvinceCode: document.getElementById("s2_state").value,
+      postalCode: document.getElementById("s2_postalCode").value,
+      countryCode: document.getElementById("s2_countryCode").value,
+      residential: document.getElementById("s2_residential").value === "true"
+    },
+    accountNumber: { value: document.getElementById("s2_accountNumber").value }
+  };
+  const jsonBody = JSON.stringify(payload);
+  const jsonPretty = JSON.stringify(payload, null, 2);
+  showRequest(2, null);
+  try {
+    const res = await sendRequest(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + bearerToken },
+      body: jsonBody,
+      rawBody: jsonPretty
+    });
+    const text = await res.text();
+    let pretty, parsed;
+    try { parsed = JSON.parse(text); pretty = JSON.stringify(parsed, null, 2); } catch { pretty = text; }
+    showRequest(2, res._fedexRequestInfo);
+    const via = res._fedexProxyTarget && res._fedexProxyTarget !== url ? res._fedexProxyTarget : null;
+    showResp(2, res.status, res.ok, pretty, via);
+    const tok = parsed && (
+      parsed.accountAuthToken ||
+      (parsed.output && parsed.output.accountAuthToken) ||
+      (parsed.output && Array.isArray(parsed.output.mfaOptions) && parsed.output.mfaOptions.length > 0 && parsed.output.mfaOptions[0].accountAuthToken)
+    );
+    if (res.ok && tok) {
+      accountAuthToken = tok;
+      const mfaInfo = parsed && parsed.output && Array.isArray(parsed.output.mfaOptions) && parsed.output.mfaOptions[0];
+      let extra = "";
+      if (mfaInfo && mfaInfo.mfaRequired) {
+        const methods = mfaInfo.options ? Object.entries(mfaInfo.options).map(([k, v]) => k + ": " + (Array.isArray(v) ? v.join(", ") : v)).join(" | ") : "";
+        extra = '<div class="result-mini-note">MFA required — options: ' + esc(methods || "See response") + "</div>";
+      }
+      document.getElementById("result-2").innerHTML =
+        '<div class="result-mini"><div class="result-mini-label"><i class="ti ti-check"></i> accountAuthToken received</div>' +
+        '<div class="result-mini-val">' + mask(accountAuthToken) + "</div>" + extra + "</div>";
+      setStepState(2, "complete", "Complete");
+      unlockStep3();
+      markSlideComplete(1, true);
+    } else {
+      setStepState(2, "error", "Unexpected response — see logs");
+      setStepState(3, "locked", "Waiting for step 2");
+      const btn3Retry = document.getElementById("btn-3");
+      if (btn3Retry) btn3Retry.disabled = true;
+      const pinBtnRetry = document.getElementById("btn-3-pin");
+      if (pinBtnRetry) pinBtnRetry.disabled = true;
+      const pinValidateRetry = document.getElementById("btn-3-pin-validate");
+      if (pinValidateRetry) pinValidateRetry.disabled = true;
+    }
+  } catch (e) {
+    showRequest(2, e.requestInfo);
+    const viaErr = e.requestInfo && e.requestInfo.proxyUrl && e.requestInfo.proxyUrl !== url ? e.requestInfo.proxyUrl : null;
+    showResp(2, 0, false, formatNetworkError(e, url), viaErr);
+    setStepState(2, "error", "Error — see logs");
+    setStepState(3, "locked", "Waiting for step 2");
+  }
+  setLoading(2, false);
+}
+
+function unlockStep3() {
+  const invoiceBtn = document.getElementById("btn-3");
+  if (invoiceBtn) invoiceBtn.disabled = false;
+  const pinBtn = document.getElementById("btn-3-pin");
+  if (pinBtn) pinBtn.disabled = false;
+  const pinValidateBtn = document.getElementById("btn-3-pin-validate");
+  if (pinValidateBtn) pinValidateBtn.disabled = true;
+  const b = document.getElementById("s3_bearer_display");
+  if (b) { b.textContent = mask(bearerToken); b.className = "auto-box-val populated"; }
+  const a = document.getElementById("s3_authtoken_display");
+  if (a) { a.textContent = mask(accountAuthToken); a.className = "auto-box-val populated"; }
+  const pinInput = document.getElementById("pin-secure-code");
+  if (pinInput) pinInput.value = "";
+  const resultInvoice = document.getElementById("result-3");
+  if (resultInvoice) resultInvoice.innerHTML = "";
+  const resultPin = document.getElementById("result-3-pin");
+  if (resultPin) resultPin.innerHTML = "";
+  const resultPinValidate = document.getElementById("result-3-pin-validate");
+  if (resultPinValidate) resultPinValidate.innerHTML = "";
+  resetSlide(2);
+  validationMode = "invoice";
+  setStepState(3, "ready", "Invoice validation ready");
+  setValidationMode("invoice");
+  openStep(3);
+}
+
+async function runInvoiceValidation() {
+  resetSlide(2);
+  setStepState(3, "running", "Validating invoice…");
+  setLoading(3, true);
+  const url = domain + "/registration/v2/invoice/keysgeneration";
+  const amountInput = document.getElementById("s3_amount").value.trim();
+  const amountNumber = Number(amountInput);
+  const amountFormatted = isNaN(amountNumber) ? amountInput : amountNumber.toFixed(2);
+  const payload = {
+    invoiceDetail: {
+      number: Number(document.getElementById("s3_invoiceNumber").value),
+      currency: document.getElementById("s3_currency").value,
+      date: document.getElementById("s3_date").value,
+      amount: amountFormatted
+    },
+    locale: "en_US"
+  };
+  const jsonBody = JSON.stringify(payload);
+  const jsonPretty = JSON.stringify(payload, null, 2);
+  showRequest(3, null);
+  const resultInvoice = document.getElementById("result-3");
+  if (resultInvoice) resultInvoice.innerHTML = "";
+  try {
+    const res = await sendRequest(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + bearerToken,
+        "accountAuthToken": accountAuthToken
+      },
+      body: jsonBody,
+      rawBody: jsonPretty
+    });
+    const text = await res.text();
+    let pretty, parsed;
+    try { parsed = JSON.parse(text); pretty = JSON.stringify(parsed, null, 2); } catch { pretty = text; }
+    showRequest(3, res._fedexRequestInfo);
+    const via = res._fedexProxyTarget && res._fedexProxyTarget !== url ? res._fedexProxyTarget : null;
+    showResp(3, res.status, res.ok, pretty, via);
+    const ck = parsed && (
+      parsed.child_key ||
+      parsed.childKey ||
+      (parsed.output && (parsed.output.child_key || parsed.output.childKey || parsed.output.child_Key)) ||
+      (parsed.output && parsed.output.credentials && (parsed.output.credentials.child_key || parsed.output.credentials.childKey || parsed.output.credentials.child_Key))
+    );
+    const cs = parsed && (
+      parsed.child_secret ||
+      parsed.childSecret ||
+      (parsed.output && (parsed.output.child_secret || parsed.output.childSecret || parsed.output.child_Secret)) ||
+      (parsed.output && parsed.output.credentials && (parsed.output.credentials.child_secret || parsed.output.credentials.childSecret || parsed.output.credentials.child_Secret))
+    );
+    if (res.ok && (ck || cs)) {
+      document.getElementById("result-3").innerHTML =
+        '<div class="output-card">' +
+        '<div class="output-title"><i class="ti ti-circle-check"></i> Credentials — copy these values</div>' +
+        '<div class="output-row"><div class="output-key">Child key</div><div class="output-val" id="out-ck">' + esc(ck || "—") + '</div>' +
+        '<button class="copy-btn" onclick="copyVal(\'out-ck\',this)"><i class="ti ti-copy"></i> Copy</button></div>' +
+        '<div class="output-row"><div class="output-key">Child secret</div><div class="output-val" id="out-cs">' + esc(cs || "—") + '</div>' +
+        '<button class="copy-btn" onclick="copyVal(\'out-cs\',this)"><i class="ti ti-copy"></i> Copy</button></div>' +
+        "</div>";
+      setStepState(3, "complete", "Complete — view logs for details");
+      markSlideComplete(2, false);
+    } else if (!res.ok) {
+      setStepState(3, "error", "Error — see logs");
+    } else {
+      setStepState(3, "error", "Unexpected response — see logs");
+    }
+  } catch (e) {
+    showRequest(3, e.requestInfo);
+    const viaErr = e.requestInfo && e.requestInfo.proxyUrl && e.requestInfo.proxyUrl !== url ? e.requestInfo.proxyUrl : null;
+    showResp(3, 0, false, formatNetworkError(e, url), viaErr);
+    setStepState(3, "error", "Error — see logs");
+  }
+  setLoading(3, false);
+}
+
+async function runPinGeneration() {
+  resetSlide(2);
+  setStepState(3, "running", "Generating PIN…");
+  setLoading(3, true, "-pin");
+  const url = domain + "/registration/v2/customerkeys/pingeneration";
+  const optionInput = document.querySelector('input[name="pin-option"]:checked');
+  const option = optionInput ? optionInput.value : "SMS";
+  const payload = { locale: "en_US", option };
+  const jsonBody = JSON.stringify(payload);
+  const jsonPretty = JSON.stringify(payload, null, 2);
+  showRequest(3, null, "-pin");
+  const resultPin = document.getElementById("result-3-pin");
+  if (resultPin) resultPin.innerHTML = "";
+  const validateBtnOff = document.getElementById("btn-3-pin-validate");
+  if (validateBtnOff) validateBtnOff.disabled = true;
+  try {
+    const res = await sendRequest(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + bearerToken,
+        "accountAuthToken": accountAuthToken
+      },
+      body: jsonBody,
+      rawBody: jsonPretty
+    });
+    const text = await res.text();
+    let pretty, parsed;
+    try { parsed = JSON.parse(text); pretty = JSON.stringify(parsed, null, 2); } catch { pretty = text; }
+    showRequest(3, res._fedexRequestInfo, "-pin");
+    const via = res._fedexProxyTarget && res._fedexProxyTarget !== url ? res._fedexProxyTarget : null;
+    showResp(3, res.status, res.ok, pretty, via, "-pin");
+    if (res.ok) {
+      const pinVal = parsed && (parsed.pin || (parsed.output && (parsed.output.pin || parsed.output.generatedPin || parsed.output.pinValue)));
+      const noteParts = [];
+      if (parsed && parsed.transactionId) noteParts.push("Transaction: " + esc(parsed.transactionId));
+      if (parsed && parsed.output && parsed.output.expirationDate) noteParts.push("Expires: " + esc(parsed.output.expirationDate));
+      const notes = noteParts.length ? '<div class="result-mini-note">' + noteParts.join(" · ") + "</div>" : "";
+      document.getElementById("result-3-pin").innerHTML =
+        '<div class="result-mini"><div class="result-mini-label"><i class="ti ti-check"></i> PIN ' + esc(option) + " requested</div>" +
+        '<div class="result-mini-val">' + esc(pinVal || "See response for details") + "</div>" + notes + "</div>";
+      setStepState(3, "ready", "PIN generated — enter secure code");
+      const pinInput = document.getElementById("pin-secure-code");
+      if (pinInput) {
+        pinInput.value = "";
+        pinInput.focus();
+      }
+      const pinValidateBtn = document.getElementById("btn-3-pin-validate");
+      if (pinValidateBtn) pinValidateBtn.disabled = false;
+    } else {
+      setStepState(3, "error", "Error — see logs");
+    }
+  } catch (e) {
+    showRequest(3, e.requestInfo, "-pin");
+    const viaErr = e.requestInfo && e.requestInfo.proxyUrl && e.requestInfo.proxyUrl !== url ? e.requestInfo.proxyUrl : null;
+    showResp(3, 0, false, formatNetworkError(e, url), viaErr, "-pin");
+    setStepState(3, "error", "Error — see logs");
+  }
+  setLoading(3, false, "-pin");
+}
+
+async function runPinValidation() {
+  resetSlide(2);
+  setStepState(3, "running", "Validating PIN…");
+  setLoading(3, true, "-pin-validate");
+  const url = domain + "/registration/v2/pin/keysgeneration";
+  const pinValue = document.getElementById("pin-secure-code").value.trim();
+  if (!pinValue) {
+    setLoading(3, false, "-pin-validate");
+    showResp(3, 0, false, "Please enter the secure code PIN before validating.", null, "-pin-validate");
+    setStepState(3, "ready", "Enter the secure code before validating");
+    const validateBtn = document.getElementById("btn-3-pin-validate");
+    if (validateBtn) validateBtn.disabled = false;
+    return;
+  }
+  const payload = { locale: "en_US", secureCodePin: pinValue };
+  const jsonBody = JSON.stringify(payload);
+  const jsonPretty = JSON.stringify(payload, null, 2);
+  showRequest(3, null, "-pin-validate");
+  const resultArea = document.getElementById("result-3-pin-validate");
+  if (resultArea) resultArea.innerHTML = "";
+  try {
+    const res = await sendRequest(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + bearerToken,
+        "accountAuthToken": accountAuthToken
+      },
+      body: jsonBody,
+      rawBody: jsonPretty
+    });
+    const text = await res.text();
+    let pretty, parsed;
+    try { parsed = JSON.parse(text); pretty = JSON.stringify(parsed, null, 2); } catch { pretty = text; }
+    showRequest(3, res._fedexRequestInfo, "-pin-validate");
+    const via = res._fedexProxyTarget && res._fedexProxyTarget !== url ? res._fedexProxyTarget : null;
+    showResp(3, res.status, res.ok, pretty, via, "-pin-validate");
+    const ck = parsed && (
+      parsed.child_key ||
+      parsed.childKey ||
+      (parsed.output && (parsed.output.child_key || parsed.output.childKey || parsed.output.child_Key)) ||
+      (parsed.output && parsed.output.credentials && (parsed.output.credentials.child_key || parsed.output.credentials.childKey || parsed.output.credentials.child_Key))
+    );
+    const cs = parsed && (
+      parsed.child_secret ||
+      parsed.childSecret ||
+      (parsed.output && (parsed.output.child_secret || parsed.output.childSecret || parsed.output.child_Secret)) ||
+      (parsed.output && parsed.output.credentials && (parsed.output.credentials.child_secret || parsed.output.credentials.childSecret || parsed.output.credentials.child_Secret))
+    );
+    if (res.ok && (ck || cs)) {
+      document.getElementById("result-3-pin-validate").innerHTML =
+        '<div class="output-card">' +
+        '<div class="output-title"><i class="ti ti-circle-check"></i> Credentials — copy these values</div>' +
+        '<div class="output-row"><div class="output-key">Child key</div><div class="output-val" id="out-ck-pin">' + esc(ck || "—") + '</div>' +
+        '<button class="copy-btn" onclick="copyVal(\'out-ck-pin\',this)"><i class="ti ti-copy"></i> Copy</button></div>' +
+        '<div class="output-row"><div class="output-key">Child secret</div><div class="output-val" id="out-cs-pin">' + esc(cs || "—") + '</div>' +
+        '<button class="copy-btn" onclick="copyVal(\'out-cs-pin\',this)"><i class="ti ti-copy"></i> Copy</button></div>' +
+        "</div>";
+      setStepState(3, "complete", "Complete — view logs for details");
+      markSlideComplete(2, false);
+    } else if (!res.ok) {
+      setStepState(3, "error", "Error — see logs");
+    } else {
+      setStepState(3, "error", "Unexpected response — see logs");
+    }
+  } catch (e) {
+    showRequest(3, e.requestInfo, "-pin-validate");
+    const viaErr = e.requestInfo && e.requestInfo.proxyUrl && e.requestInfo.proxyUrl !== url ? e.requestInfo.proxyUrl : null;
+    showResp(3, 0, false, formatNetworkError(e, url), viaErr, "-pin-validate");
+    setStepState(3, "error", "Error — see logs");
+  }
+  setLoading(3, false, "-pin-validate");
+}
+
+function copyVal(id, btn) {
+  navigator.clipboard.writeText(document.getElementById(id).textContent).then(() => {
+    btn.innerHTML = '<i class="ti ti-check"></i> Copied';
+    setTimeout(() => { btn.innerHTML = '<i class="ti ti-copy"></i> Copy'; }, 1500);
+  });
+}
+
+initIndicators();
+setStepState(1, "ready", "Start here");
+setStepState(2, "locked", "Waiting for step 1");
+setStepState(3, "locked", "Waiting for step 2");
+updateCarousel();
+renderLogs();
+document.querySelectorAll('input[name="log-filter"]').forEach(cb => cb.addEventListener("change", renderLogs));
+switchView("workflow");
+setValidationMode("invoice");
+</script>
+</body>
+</html>
