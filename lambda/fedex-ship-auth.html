@@ -22,10 +22,13 @@
   .domain-bar label { font-size: 12px; color: #666; white-space: nowrap; display: flex; align-items: center; gap: 5px; }
   .domain-bar input { flex: 1; font-size: 13px; padding: 6px 10px; border-radius: 7px; border: 1px solid rgba(0,0,0,0.15); background: #fff; color: #1a1a18; font-family: 'Courier New', monospace; max-width: 480px; }
   .domain-bar input:focus { outline: none; border-color: rgba(0,0,0,0.3); }
+  .domain-bar input:disabled { background: #f5f5f3; color: #777; cursor: not-allowed; }
   .env-pills { display: inline-flex; gap: 6px; }
   .env-pill { padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(0,0,0,0.12); background: #fff; font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; color: #555; }
   .env-pill.active { background: #0C447C; color: #fff; border-color: #0C447C; }
   .env-pill:hover { border-color: #0C447C; }
+  .env-pill:disabled { opacity: 0.55; cursor: not-allowed; }
+  .env-pill:disabled:hover { border-color: rgba(0,0,0,0.12); }
   .env-badge { font-size: 11px; padding: 3px 9px; border-radius: 4px; font-weight: 500; white-space: nowrap; }
   .env-sandbox { background: #FAEEDA; color: #854F0B; }
   .env-prod { background: #EAF3DE; color: #3B6D11; }
@@ -305,6 +308,7 @@
 
 <script>
 let bearerToken = "", accountAuthToken = "", domain = "https://apis-sandbox.fedex.com";
+let environmentLocked = false;
 let openSteps = { 1: true, 2: false, 3: false };
 let validationMode = "invoice";
 const isFileOrigin = window.location.protocol === "file:";
@@ -376,6 +380,13 @@ function formatNetworkError(err, url) {
 }
 
 function updateDomain(v) {
+  if (environmentLocked) {
+    const input = document.getElementById("domain-input");
+    if (input && input.value.trim().replace(/\/$/, "") !== domain) {
+      input.value = domain;
+    }
+    return;
+  }
   domain = v.trim().replace(/\/$/, "");
   const isSandbox = domain.includes("sandbox");
   const badge = document.getElementById("env-badge");
@@ -398,6 +409,16 @@ function updateEnvPills(env) {
   const prodPill = document.getElementById("pill-production");
   if (sandboxPill) sandboxPill.classList.toggle("active", env === "sandbox");
   if (prodPill) prodPill.classList.toggle("active", env === "production");
+}
+
+function setEnvironmentLocked(locked) {
+  environmentLocked = locked;
+  const input = document.getElementById("domain-input");
+  const sandboxPill = document.getElementById("pill-sandbox");
+  const prodPill = document.getElementById("pill-production");
+  if (input) input.disabled = locked;
+  if (sandboxPill) sandboxPill.disabled = locked;
+  if (prodPill) prodPill.disabled = locked;
 }
 
 function toggleStep(n) {
@@ -481,6 +502,7 @@ function clearLogs() {
 }
 
 function setEnvironment(env) {
+  if (environmentLocked) return;
   const url = env === "production" ? "https://apis.fedex.com" : "https://apis-sandbox.fedex.com";
   const input = document.getElementById("domain-input");
   if (input) input.value = url;
@@ -696,6 +718,7 @@ function setLoading(n, loading, suffix = "") {
 }
 
 async function runStep1() {
+  setEnvironmentLocked(true);
   resetSlide(0);
   resetSlide(1);
   resetSlide(2);
@@ -1120,6 +1143,7 @@ initIndicators();
 setStepState(1, "ready", "Start here");
 setStepState(2, "locked", "Waiting for step 1");
 setStepState(3, "locked", "Waiting for step 2");
+setEnvironmentLocked(false);
 updateCarousel();
 renderLogs();
 document.querySelectorAll('input[name="log-filter"]').forEach(cb => cb.addEventListener("change", renderLogs));
