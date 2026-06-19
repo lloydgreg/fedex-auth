@@ -1,0 +1,11 @@
+aws_region   = "eu-west-2"
+project_name = "fedex-auth-helper"
+
+fedex_sandbox_api_base_url    = "https://apis-sandbox.fedex.com"
+fedex_production_api_base_url = "https://apis.fedex.com"
+
+tags = {
+  Project     = "fedex-auth-helper"
+  ManagedBy   = "terraform"
+  Environment = "dev"
+}

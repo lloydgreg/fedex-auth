@@ -4,6 +4,8 @@ import { fileURLToPath } from "url";
 
 const PORT = process.env.PORT || 8010;
 const MAX_BODY = process.env.MAX_BODY || "10mb";
+const SANDBOX_API_BASE_URL = process.env.FEDEX_SANDBOX_API_BASE_URL || "https://apis-sandbox.fedex.com";
+const PRODUCTION_API_BASE_URL = process.env.FEDEX_PRODUCTION_API_BASE_URL || "https://apis.fedex.com";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const STATIC_ROOT = process.env.STATIC_DIR
@@ -13,8 +15,6 @@ const STATIC_ROOT = process.env.STATIC_DIR
 const HOP_BY_HOP = new Set([
   "connection",
   "keep-alive",
-  "proxy-authenticate",
-  "proxy-authorization",
   "te",
   "trailer",
   "transfer-encoding",
@@ -22,6 +22,14 @@ const HOP_BY_HOP = new Set([
   "host",
   "content-length"
 ]);
+
+const FEDEX_ROUTES = [
+  "/oauth/token",
+  "/registration/v2/address/keysgeneration",
+  "/registration/v2/invoice/keysgeneration",
+  "/registration/v2/customerkeys/pingeneration",
+  "/registration/v2/pin/keysgeneration"
+];
 
 const app = express();
 
@@ -44,43 +52,35 @@ app.use((req, res, next) => {
 
 app.options("*", (req, res) => res.sendStatus(204));
 
-app.use("/proxy", express.raw({ type: "*/*", limit: MAX_BODY }));
+app.use(FEDEX_ROUTES, express.raw({ type: "*/*", limit: MAX_BODY }));
 app.use(express.static(STATIC_ROOT));
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(STATIC_ROOT, "fedex-ship-auth.html"));
 });
 
-function normalizeTarget(raw) {
-  if (!raw) return null;
-  const value = Array.isArray(raw) ? raw[0] : raw;
-  try {
-    return decodeURIComponent(value);
-  } catch (_) {
-    return value;
-  }
+function fedexBaseUrl(req) {
+  return String(req.header("x-fedex-environment") || "").toLowerCase() === "production"
+    ? PRODUCTION_API_BASE_URL
+    : SANDBOX_API_BASE_URL;
 }
 
-function sanitizeHeaders(headers) {
+function upstreamRequestHeaders(headers) {
   const result = {};
   for (const [key, value] of Object.entries(headers || {})) {
     if (!value) continue;
     if (HOP_BY_HOP.has(key.toLowerCase())) continue;
+    if (key.toLowerCase() === "x-fedex-environment") continue;
     result[key] = value;
   }
   return result;
 }
 
-app.all("/proxy", async (req, res) => {
-  const target = normalizeTarget(req.query.url);
-  if (!target) {
-    res.status(400).json({ error: "Missing target URL. Provide ?url=https://apis-sandbox.fedex.com/..." });
-    return;
-  }
-
+app.all(FEDEX_ROUTES, async (req, res) => {
+  const target = new URL(req.originalUrl, fedexBaseUrl(req)).toString();
   const requestInit = {
     method: req.method,
-    headers: sanitizeHeaders(req.headers)
+    headers: upstreamRequestHeaders(req.headers)
   };
 
   if (req.method !== "GET" && req.method !== "HEAD" && req.body && req.body.length > 0) {
@@ -114,12 +114,12 @@ app.all("/proxy", async (req, res) => {
       res.send(Buffer.from(arrayBuffer));
     }
   } catch (err) {
-    res.status(502).json({ error: "Proxy request failed", details: err.message || String(err) });
+    res.status(502).json({ error: "FedEx request failed", details: err.message || String(err) });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`FedEx proxy listening on http://localhost:${PORT}`);
+  console.log(`FedEx auth helper listening on http://localhost:${PORT}`);
   console.log(`Serving static files from ${STATIC_ROOT}`);
-  console.log(`Proxy endpoint available at http://localhost:${PORT}/proxy?url=...`);
+  console.log(`FedEx server-side routes available at http://localhost:${PORT}/oauth/token and /registration/v2/...`);
 });
