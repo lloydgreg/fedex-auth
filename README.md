@@ -89,6 +89,37 @@ The stack is designed for:
 
 Build/export the Next.js frontend first. By default Terraform expects the static export at `../out` relative to the `terraform` directory. Change `frontend_build_dir` in `terraform.tfvars` if your export lives elsewhere.
 
+Create `terraform/terraform.tfvars` from the example file and set values for your environment:
+
+```hcl
+aws_region   = "eu-west-2"
+project_name = "fedex-auth-helper"
+
+# Optional. Leave null to generate a bucket name like:
+# fedex-auth-helper-frontend-123456789012-eu-west-2
+frontend_bucket_name = null
+
+# Static Next.js export directory, relative to terraform/
+frontend_build_dir = "../out"
+
+# CloudFront edge price class
+cloudfront_price_class = "PriceClass_100"
+
+# FedEx upstreams used by the Lambda backend
+fedex_sandbox_api_base_url    = "https://apis-sandbox.fedex.com"
+fedex_production_api_base_url = "https://apis.fedex.com"
+
+# API Gateway CORS. Use ["*"] for initial testing, then restrict for production.
+api_cors_allowed_origins           = ["*"]
+api_cors_include_cloudfront_origin = true
+
+tags = {
+  Project     = "fedex-auth-helper"
+  ManagedBy   = "terraform"
+  Environment = "dev"
+}
+```
+
 ```sh
 cd terraform
 cp terraform.tfvars.example terraform.tfvars
@@ -105,6 +136,41 @@ api_gateway_url
 frontend_s3_bucket
 cloudfront_distribution_id
 lambda_function_name
+```
+
+Example output values look like:
+
+```text
+frontend_cloudfront_url = "https://d123abc456def.cloudfront.net"
+api_gateway_url         = "https://abc123xyz.execute-api.eu-west-2.amazonaws.com"
+frontend_s3_bucket      = "fedex-auth-helper-frontend-123456789012-eu-west-2"
+cloudfront_distribution_id = "E123ABC456DEF"
+lambda_function_name    = "fedex-auth-helper-app"
+```
+
+Resource URLs and identifiers:
+
+```text
+Frontend URL:
+https://<cloudfront_distribution_domain>
+
+Backend API base URL:
+https://<api_id>.execute-api.eu-west-2.amazonaws.com
+
+Frontend S3 bucket name:
+fedex-auth-helper-frontend-<aws_account_id>-eu-west-2
+
+Frontend S3 console URL:
+https://s3.console.aws.amazon.com/s3/buckets/<frontend_s3_bucket>?region=eu-west-2
+
+Lambda function name:
+fedex-auth-helper-app
+
+Lambda console URL:
+https://eu-west-2.console.aws.amazon.com/lambda/home?region=eu-west-2#/functions/fedex-auth-helper-app
+
+CloudFront console URL:
+https://console.aws.amazon.com/cloudfront/v4/home#/distributions/<cloudfront_distribution_id>
 ```
 
 Terraform also uploads `runtime-config.json` to the frontend bucket:
