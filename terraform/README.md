@@ -1,6 +1,6 @@
 # AWS Hosting
 
-This Terraform stack deploys a static Next.js frontend to a private S3 bucket behind CloudFront, and a Node.js backend to Lambda behind an API Gateway HTTP API.
+This Terraform stack deploys the static frontend export to a private S3 bucket behind CloudFront, and a Node.js backend to Lambda behind an API Gateway HTTP API.
 
 ## What It Creates
 
@@ -13,13 +13,13 @@ This Terraform stack deploys a static Next.js frontend to a private S3 bucket be
 
 ## Deploy
 
-Build the Next.js frontend as a static export first. By default Terraform expects the exported files in `../out` relative to the `terraform` directory, so either place the Next.js app in this repository or change `frontend_build_dir` in `terraform.tfvars`.
+Build the frontend export first. By default Terraform expects the exported files in `../out` relative to the `terraform` directory.
 
 ```sh
-# From the Next.js app directory, with output: "export" configured:
-npm run build
+# From the repository root:
+npm run build:frontend
 
-# Then from this repository:
+# Then deploy:
 cd terraform
 cp terraform.tfvars.example terraform.tfvars
 terraform init
@@ -35,7 +35,7 @@ After apply:
 
 ## Static Assets
 
-Terraform uploads files from `frontend_build_dir`, which defaults to `../out`.
+Terraform uploads files from `frontend_build_dir`, which defaults to `../out`. The generated `runtime-config.json` is also uploaded and contains the API Gateway URL used by the static frontend.
 
 ## FedEx Upstream URLs
 

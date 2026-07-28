@@ -87,11 +87,15 @@ Terraform lives in `terraform/`.
 
 The stack is designed for:
 
-- Frontend: static Next.js export in S3 behind CloudFront
+- Frontend: static HTML export in S3 behind CloudFront
 - Backend: Node.js Lambda behind API Gateway
 - Region: `eu-west-2` by default
 
-Build/export the Next.js frontend first. By default Terraform expects the static export at `../out` relative to the `terraform` directory. Change `frontend_build_dir` in `terraform.tfvars` if your export lives elsewhere.
+Build/export the frontend first. The export script copies the current `fedex-ship-auth.html` to `out/index.html` and includes `favicon.png`. By default Terraform expects that static export at `../out` relative to the `terraform` directory.
+
+```sh
+npm run build:frontend
+```
 
 Create `terraform/terraform.tfvars` from the example file and set values for your environment:
 
@@ -103,7 +107,7 @@ project_name = "fedex-auth-helper"
 # fedex-auth-helper-frontend-123456789012-eu-west-2
 frontend_bucket_name = null
 
-# Static Next.js export directory, relative to terraform/
+# Static frontend export directory, relative to terraform/
 frontend_build_dir = "../out"
 
 # CloudFront edge price class

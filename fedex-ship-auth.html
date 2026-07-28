@@ -367,6 +367,7 @@
 
 <script>
 let bearerToken = "", accountAuthToken = "", domain = "https://apis-sandbox.fedex.com";
+let apiProxyBaseUrl = "";
 let environmentLocked = false;
 let openSteps = { 1: true, 2: false, 3: false };
 let validationMode = "invoice";
@@ -451,6 +452,25 @@ function serverPathFor(url) {
   return parsed.pathname + parsed.search;
 }
 
+function apiRequestUrl(targetPath) {
+  if (!apiProxyBaseUrl) return targetPath;
+  return new URL(targetPath, apiProxyBaseUrl).toString();
+}
+
+async function initRuntimeConfig() {
+  if (isFileOrigin) return;
+  try {
+    const res = await fetch("/runtime-config.json", { cache: "no-store" });
+    if (!res.ok) return;
+    const config = await res.json();
+    if (config && typeof config.apiBaseUrl === "string" && config.apiBaseUrl.trim()) {
+      apiProxyBaseUrl = config.apiBaseUrl.trim().replace(/\/$/, "") + "/";
+    }
+  } catch {
+    apiProxyBaseUrl = "";
+  }
+}
+
 async function sendRequest(url, options) {
   if (isFileOrigin) {
     throw new Error("This page must be served from the Node helper at http://localhost:8010/");
@@ -459,7 +479,7 @@ async function sendRequest(url, options) {
   const opts = Object.assign({}, options || {});
   opts.headers = Object.assign({}, opts.headers, { "x-fedex-environment": fedexEnvironment() });
   try {
-    return await fetch(targetPath, opts);
+    return await fetch(apiRequestUrl(targetPath), opts);
   } catch (err) {
     const error = new Error(err && err.message ? err.message : "Failed to fetch");
     throw error;
@@ -1354,14 +1374,19 @@ function copyVal(id, btn) {
   });
 }
 
-initIndicators();
-initCountryPicker();
-setStepState(1, "ready", "Start here");
-setStepState(2, "locked", "Waiting for step 1");
-setStepState(3, "locked", "Waiting for step 2");
-setEnvironmentLocked(false);
-updateCarousel();
-setValidationMode("invoice");
+async function initApp() {
+  await initRuntimeConfig();
+  initIndicators();
+  initCountryPicker();
+  setStepState(1, "ready", "Start here");
+  setStepState(2, "locked", "Waiting for step 1");
+  setStepState(3, "locked", "Waiting for step 2");
+  setEnvironmentLocked(false);
+  updateCarousel();
+  setValidationMode("invoice");
+}
+
+initApp();
 </script>
 </body>
 </html>
