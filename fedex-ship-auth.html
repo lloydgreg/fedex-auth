@@ -22,6 +22,7 @@
   .domain-bar label { font-size: 12px; color: #666; white-space: nowrap; display: flex; align-items: center; gap: 5px; }
   .domain-bar input { flex: 1; font-size: 13px; padding: 6px 10px; border-radius: 7px; border: 1px solid rgba(0,0,0,0.15); background: #fff; color: #1a1a18; font-family: 'Courier New', monospace; max-width: 480px; }
   .domain-bar input:focus { outline: none; border-color: rgba(0,0,0,0.3); }
+  .domain-bar input[readonly] { background: #f5f5f3; color: #555; cursor: default; }
   .domain-bar input:disabled { background: #f5f5f3; color: #777; cursor: not-allowed; }
   .env-pills { display: inline-flex; gap: 6px; }
   .env-pill { padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(0,0,0,0.12); background: #fff; font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; color: #555; }
@@ -32,12 +33,29 @@
   .env-badge { font-size: 11px; padding: 3px 9px; border-radius: 4px; font-weight: 500; white-space: nowrap; }
   .env-sandbox { background: #FAEEDA; color: #854F0B; }
   .env-prod { background: #EAF3DE; color: #3B6D11; }
+  .env-lock-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 4px 8px; border-radius: 999px; background: #fff; border: 1px solid rgba(0,0,0,0.12); color: #777; white-space: nowrap; }
+  .env-lock-badge.locked { background: #FCEBEB; border-color: #F3C1C1; color: #7A1F1F; }
+  .reset-btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 10px; border-radius: 7px; border: 1px solid rgba(0,0,0,0.16); background: #fff; color: #0C447C; font-size: 12px; cursor: pointer; font-family: inherit; white-space: nowrap; }
+  .reset-btn:hover { border-color: #0C447C; background: #f8fbfd; }
 
   /* Main content */
-  .content { max-width: 680px; margin: 0 auto; padding: 20px 16px 40px; }
+  .workflow-layout { display: grid; grid-template-columns: minmax(0, 720px) 280px; gap: 18px; align-items: start; max-width: 1080px; margin: 0 auto; padding: 20px 16px 40px; }
+  .content { max-width: 680px; margin: 0 auto; padding: 0; width: 100%; }
+  .summary-panel { position: sticky; top: 16px; border: 1px solid rgba(0,0,0,0.1); border-radius: 10px; background: #fff; padding: 14px; }
+  .summary-title { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: #1a1a18; margin-bottom: 12px; }
+  .summary-list { display: grid; gap: 10px; }
+  .summary-row { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.07); }
+  .summary-row:last-child { border-bottom: 0; padding-bottom: 0; }
+  .summary-label { font-size: 11px; color: #777; text-transform: uppercase; letter-spacing: 0.04em; }
+  .summary-value { font-size: 12px; color: #1a1a18; text-align: right; max-width: 150px; word-break: break-word; }
+  .summary-value.pending { color: #999; font-style: italic; }
+  .summary-value.ready { color: #0C447C; }
+  .summary-value.complete { color: #3B6D11; }
+  .summary-value.error { color: #A32D2D; }
 
   /* Step cards */
   .step-card { border: 1px solid rgba(0,0,0,0.1); border-radius: 12px; overflow: hidden; margin-bottom: 12px; background: #fff; }
+  .step-card.loading { border-color: #E0B74F; box-shadow: 0 0 0 2px rgba(224,183,79,0.12); }
   .step-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: #f5f5f3; cursor: pointer; user-select: none; }
   .step-header:hover { background: #efefed; }
   .step-num { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; flex-shrink: 0; }
@@ -63,9 +81,23 @@
 
   /* Fields */
   .field-row { margin-bottom: 11px; }
+  .field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; }
   .field-row label { display: block; font-size: 12px; color: #666; margin-bottom: 3px; }
   .field-row input, .field-row select { width: 100%; font-size: 13px; padding: 7px 10px; border-radius: 7px; border: 1px solid rgba(0,0,0,0.15); background: #f5f5f3; color: #1a1a18; font-family: inherit; }
   .field-row input:focus, .field-row select:focus { outline: none; border-color: rgba(0,0,0,0.3); background: #fff; }
+  .country-combobox { position: relative; }
+  .country-input-wrap { position: relative; }
+  .country-input-wrap input { padding-right: 34px; }
+  .country-toggle { position: absolute; top: 50%; right: 6px; transform: translateY(-50%); width: 24px; height: 24px; border: 0; background: transparent; color: #777; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; border-radius: 5px; }
+  .country-toggle:hover { background: rgba(0,0,0,0.06); color: #0C447C; }
+  .country-options { position: absolute; z-index: 20; top: calc(100% + 4px); left: 0; right: 0; max-height: 220px; overflow: auto; background: #fff; border: 1px solid rgba(0,0,0,0.16); border-radius: 8px; box-shadow: 0 10px 24px rgba(0,0,0,0.12); padding: 4px; display: none; }
+  .country-options.open { display: block; }
+  .country-option { width: 100%; border: 0; background: transparent; display: flex; align-items: center; gap: 8px; text-align: left; padding: 7px 8px; border-radius: 6px; cursor: pointer; font-family: inherit; color: #1a1a18; }
+  .country-option:hover, .country-option.active { background: #E6F1FB; }
+  .country-flag { width: 20px; flex: 0 0 auto; font-size: 15px; line-height: 1; }
+  .country-name { flex: 1; min-width: 0; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .country-code { font-family: 'Courier New', monospace; font-size: 11px; color: #777; }
+  .country-empty { padding: 8px; color: #777; font-size: 12px; }
 
   /* Auto boxes */
   .auto-box { background: #f5f5f3; border: 1px solid rgba(0,0,0,0.1); border-radius: 7px; padding: 9px 12px; margin-bottom: 10px; }
@@ -78,6 +110,9 @@
   .send-btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 18px; background: #fff; border: 1px solid rgba(0,0,0,0.2); border-radius: 7px; color: #1a1a18; font-size: 13px; cursor: pointer; margin-top: 6px; font-family: inherit; }
   .send-btn:hover { background: #f5f5f3; }
   .send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .send-btn.is-loading { opacity: 0.75; cursor: wait; }
+  .send-btn.is-loading .ti-loader { animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
   /* File warning */
   .file-warning { background: #FCEBEB; color: #7A1F1F; border: 1px solid #F3C1C1; padding: 12px 18px; margin: 16px 24px; border-radius: 10px; font-size: 13px; line-height: 1.5; }
@@ -119,11 +154,30 @@
   .copy-btn { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 4px 10px; border-radius: 6px; border: 1px solid #C0DD97; background: transparent; color: #3B6D11; cursor: pointer; margin-top: 6px; font-family: inherit; }
   .copy-btn:hover { background: #C0DD97; }
 
-  /* Result mini box */
-  .result-mini { background: #f5f5f3; border: 1px solid rgba(0,0,0,0.1); border-radius: 7px; padding: 9px 12px; margin-top: 10px; }
-  .result-mini-label { font-size: 11px; color: #3B6D11; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.04em; }
-  .result-mini-val { font-family: 'Courier New', monospace; font-size: 12px; color: #1a1a18; word-break: break-all; }
-  .result-mini-note { font-size: 11px; color: #7A1F1F; margin-top: 6px; line-height: 1.4; }
+  .result-panel { border-radius: 8px; padding: 12px 14px; margin-top: 12px; border: 1px solid rgba(0,0,0,0.1); background: #fff; }
+  .result-panel.success { background: #F4FAEC; border-color: #C0DD97; }
+  .result-panel.error { background: #FDF1F1; border-color: #F3C1C1; }
+  .result-panel-title { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .result-panel.success .result-panel-title { color: #27500A; }
+  .result-panel.error .result-panel-title { color: #7A1F1F; }
+  .result-panel-body { font-size: 12px; color: #444; line-height: 1.45; }
+  .result-panel-value { margin-top: 8px; font-family: 'Courier New', monospace; font-size: 12px; color: #1a1a18; word-break: break-all; background: #fff; border: 1px solid rgba(0,0,0,0.08); border-radius: 6px; padding: 7px 9px; }
+
+  @media (max-width: 940px) {
+    .workflow-layout { grid-template-columns: 1fr; }
+    .summary-panel { position: static; order: -1; margin: 0 24px; }
+  }
+
+  @media (max-width: 720px) {
+    .domain-bar { align-items: stretch; flex-direction: column; }
+    .domain-bar input { max-width: none; width: 100%; }
+    .env-pills { width: 100%; }
+    .env-pill, .reset-btn { justify-content: center; flex: 1; }
+    .field-grid { grid-template-columns: 1fr; gap: 0; }
+    .summary-panel { margin: 0 16px; }
+    .carousel { margin: 0 16px 16px; }
+    .carousel-controls { margin: 10px 16px 18px; }
+  }
 </style>
 </head>
 <body>
@@ -144,16 +198,19 @@
 
 <div class="domain-bar">
   <label><i class="ti ti-world"></i> API base URL</label>
-  <input type="text" id="domain-input" value="https://apis-sandbox.fedex.com" oninput="updateDomain(this.value)">
+  <input type="text" id="domain-input" value="https://apis-sandbox.fedex.com" readonly aria-label="Selected FedEx API base URL">
   <div class="env-pills">
     <button type="button" class="env-pill active" id="pill-sandbox" onclick="setEnvironment('sandbox')"><i class="ti ti-plant"></i> Sandbox</button>
     <button type="button" class="env-pill" id="pill-production" onclick="setEnvironment('production')"><i class="ti ti-building"></i> Production</button>
   </div>
   <span class="env-badge env-sandbox" id="env-badge">Sandbox</span>
+  <span class="env-lock-badge" id="env-lock-badge"><i class="ti ti-lock-open"></i> Environment selectable</span>
+  <button type="button" class="reset-btn" onclick="startOver()"><i class="ti ti-refresh"></i> Start over</button>
 </div>
 
 <div id="workflow-view">
 <div class="carousel">
+<div class="workflow-layout">
 <div class="content">
 
   <!-- STEP 1 -->
@@ -189,12 +246,25 @@
         <div class="auto-box-label"><i class="ti ti-lock"></i> Bearer token <span class="auto-pill"><i class="ti ti-bolt"></i> auto from step 1</span></div>
         <div class="auto-box-val" id="s2_bearer_display">Populated after step 1 completes</div>
       </div>
-      <div class="field-row"><label>Customer name</label><input type="text" id="s2_customerName" value=""></div>
+      <div class="field-grid">
+        <div class="field-row"><label>Customer name</label><input type="text" id="s2_customerName" value=""></div>
+        <div class="field-row"><label>Account number</label><input type="text" id="s2_accountNumber" value=""></div>
+      </div>
       <div class="field-row"><label>Street</label><input type="text" id="s2_street" value=""></div>
       <div class="field-row"><label>City</label><input type="text" id="s2_city" value=""></div>
       <div class="field-row"><label>State / province code</label><input type="text" id="s2_state" value=""></div>
       <div class="field-row"><label>Postal code</label><input type="text" id="s2_postalCode" value=""></div>
-      <div class="field-row"><label>Country code</label><input type="text" id="s2_countryCode" value=""></div>
+      <div class="field-row country-field">
+        <label>Country</label>
+        <div class="country-combobox" id="country-combobox">
+          <div class="country-input-wrap">
+            <input type="text" id="s2_countrySearch" placeholder="Search country or code" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="country-options">
+            <input type="hidden" id="s2_countryCode" value="">
+            <button type="button" class="country-toggle" id="country-toggle" aria-label="Show countries"><i class="ti ti-chevron-down"></i></button>
+          </div>
+          <div class="country-options" id="country-options" role="listbox"></div>
+        </div>
+      </div>
       <div class="field-row">
         <label>Residential</label>
         <select id="s2_residential">
@@ -202,7 +272,6 @@
           <option value="true">Yes</option>
         </select>
       </div>
-      <div class="field-row"><label>Account number</label><input type="text" id="s2_accountNumber" value=""></div>
       <button class="send-btn" id="btn-2" data-label="Send request" data-loading-label="Validating…" onclick="runStep2()" disabled><i class="ti ti-send"></i> Send request</button>
       <div id="result-2"></div>
     </div>
@@ -260,6 +329,32 @@
 
 </div>
 
+<aside class="summary-panel" aria-label="Workflow summary">
+  <div class="summary-title"><i class="ti ti-list-check"></i> Workflow summary</div>
+  <div class="summary-list">
+    <div class="summary-row">
+      <span class="summary-label">Environment</span>
+      <span class="summary-value ready" id="summary-environment">Sandbox</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-label">Lock</span>
+      <span class="summary-value pending" id="summary-lock">Selectable</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-label">Bearer token</span>
+      <span class="summary-value pending" id="summary-bearer">Not requested</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-label">Account auth</span>
+      <span class="summary-value pending" id="summary-account-auth">Waiting</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-label">Validation</span>
+      <span class="summary-value pending" id="summary-validation">Invoice</span>
+    </div>
+  </div>
+</aside>
+
 </div>
 
 <div class="carousel-controls">
@@ -283,6 +378,57 @@ if (currentSlide === -1) currentSlide = 0;
 const indicatorsContainer = document.getElementById("carousel-indicators");
 const prevBtn = document.getElementById("carousel-prev");
 const nextBtn = document.getElementById("carousel-next");
+const ISO_COUNTRY_CODES = [
+  "AF","AX","AL","DZ","AS","AD","AO","AI","AQ","AG","AR","AM","AW","AU","AT","AZ",
+  "BS","BH","BD","BB","BY","BE","BZ","BJ","BM","BT","BO","BQ","BA","BW","BV","BR",
+  "IO","BN","BG","BF","BI","KH","CM","CA","CV","KY","CF","TD","CL","CN","CX","CC",
+  "CO","KM","CG","CD","CK","CR","CI","HR","CU","CW","CY","CZ","DK","DJ","DM","DO",
+  "EC","EG","SV","GQ","ER","EE","SZ","ET","FK","FO","FJ","FI","FR","GF","PF","TF",
+  "GA","GM","GE","DE","GH","GI","GR","GL","GD","GP","GU","GT","GG","GN","GW","GY",
+  "HT","HM","VA","HN","HK","HU","IS","IN","ID","IR","IQ","IE","IM","IL","IT","JM",
+  "JP","JE","JO","KZ","KE","KI","KP","KR","KW","KG","LA","LV","LB","LS","LR","LY",
+  "LI","LT","LU","MO","MG","MW","MY","MV","ML","MT","MH","MQ","MR","MU","YT","MX",
+  "FM","MD","MC","MN","ME","MS","MA","MZ","MM","NA","NR","NP","NL","NC","NZ","NI",
+  "NE","NG","NU","NF","MK","MP","NO","OM","PK","PW","PS","PA","PG","PY","PE","PH",
+  "PN","PL","PT","PR","QA","RE","RO","RU","RW","BL","SH","KN","LC","MF","PM","VC",
+  "WS","SM","ST","SA","SN","RS","SC","SL","SG","SX","SK","SI","SB","SO","ZA","GS",
+  "SS","ES","LK","SD","SR","SJ","SE","CH","SY","TW","TJ","TZ","TH","TL","TG","TK",
+  "TO","TT","TN","TR","TM","TC","TV","UG","UA","AE","GB","US","UM","UY","UZ","VU",
+  "VE","VN","VG","VI","WF","EH","YE","ZM","ZW","XK"
+];
+const COUNTRY_NAME_OVERRIDES = {
+  AX: "Aland Islands",
+  BO: "Bolivia",
+  BQ: "Caribbean Netherlands",
+  CD: "Congo, Democratic Republic of the",
+  CG: "Congo",
+  CI: "Cote d'Ivoire",
+  FK: "Falkland Islands",
+  IR: "Iran",
+  KP: "North Korea",
+  KR: "South Korea",
+  LA: "Laos",
+  MD: "Moldova",
+  MK: "North Macedonia",
+  PS: "Palestine",
+  RU: "Russia",
+  SY: "Syria",
+  TW: "Taiwan",
+  TZ: "Tanzania",
+  US: "United States",
+  VA: "Vatican City",
+  VE: "Venezuela",
+  VN: "Vietnam",
+  XK: "Kosovo"
+};
+const countryNames = typeof Intl !== "undefined" && Intl.DisplayNames
+  ? new Intl.DisplayNames(["en"], { type: "region" })
+  : null;
+const COUNTRIES = ISO_COUNTRY_CODES.map(code => ({
+  code,
+  name: COUNTRY_NAME_OVERRIDES[code] || (countryNames ? countryNames.of(code) : code),
+  flag: countryFlag(code)
+})).sort((a, b) => a.name.localeCompare(b.name));
 
 (function initOriginWarning() {
   const banner = document.getElementById("file-warning");
@@ -293,6 +439,11 @@ const nextBtn = document.getElementById("carousel-next");
 
 function fedexEnvironment() {
   return domain.includes("sandbox") ? "sandbox" : "production";
+}
+
+function countryFlag(code) {
+  if (!/^[A-Z]{2}$/.test(code)) return "";
+  return code.replace(/./g, char => String.fromCodePoint(127397 + char.charCodeAt(0)));
 }
 
 function serverPathFor(url) {
@@ -338,6 +489,7 @@ function updateDomain(v) {
   document.getElementById("url-3").textContent = "POST " + domain + "/registration/v2/invoice/keysgeneration";
   const pinUrl = document.getElementById("url-3-pin");
   if (pinUrl) pinUrl.textContent = "POST " + domain + "/registration/v2/customerkeys/pingeneration";
+  updateSummary();
 }
 
 function updateEnvPills(env) {
@@ -352,9 +504,20 @@ function setEnvironmentLocked(locked) {
   const input = document.getElementById("domain-input");
   const sandboxPill = document.getElementById("pill-sandbox");
   const prodPill = document.getElementById("pill-production");
-  if (input) input.disabled = locked;
+  const lockBadge = document.getElementById("env-lock-badge");
+  if (input) {
+    input.disabled = false;
+    input.readOnly = true;
+  }
   if (sandboxPill) sandboxPill.disabled = locked;
   if (prodPill) prodPill.disabled = locked;
+  if (lockBadge) {
+    lockBadge.classList.toggle("locked", locked);
+    lockBadge.innerHTML = locked
+      ? '<i class="ti ti-lock"></i> Environment locked'
+      : '<i class="ti ti-lock-open"></i> Environment selectable';
+  }
+  updateSummary();
 }
 
 function toggleStep(n) {
@@ -390,6 +553,7 @@ function setStepState(step, state, text) {
     else if (state === "locked") num.className = "step-num locked";
     else num.className = "step-num active";
   }
+  updateSummary();
 }
 
 function resetSlide(idx) {
@@ -504,6 +668,7 @@ function setValidationMode(mode) {
   if (status && num && num.classList.contains("active")) {
     status.textContent = mode === "invoice" ? "Invoice validation ready" : "PIN validation ready";
   }
+  updateSummary();
 }
 
 function esc(s) {
@@ -515,17 +680,192 @@ function mask(t) {
   return t.slice(0, 6) + "••••••••" + t.slice(-4);
 }
 
+let countryMatches = [];
+let countryActiveIndex = -1;
+
+function countryLabel(country) {
+  return country.flag + " " + country.name + " (" + country.code + ")";
+}
+
+function countrySearchValue() {
+  const input = document.getElementById("s2_countrySearch");
+  return input ? input.value.trim() : "";
+}
+
+function setCountryOptionsOpen(open) {
+  const options = document.getElementById("country-options");
+  const input = document.getElementById("s2_countrySearch");
+  if (options) options.classList.toggle("open", open);
+  if (input) input.setAttribute("aria-expanded", open ? "true" : "false");
+}
+
+function renderCountryOptions(query = "") {
+  const options = document.getElementById("country-options");
+  if (!options) return;
+  const normalized = query.trim().toLowerCase();
+  countryMatches = COUNTRIES.filter(country => {
+    if (!normalized) return true;
+    return country.name.toLowerCase().includes(normalized) || country.code.toLowerCase().startsWith(normalized);
+  }).slice(0, 12);
+  countryActiveIndex = countryMatches.length ? 0 : -1;
+
+  if (!countryMatches.length) {
+    options.innerHTML = '<div class="country-empty">No matching countries</div>';
+    return;
+  }
+
+  options.innerHTML = countryMatches.map((country, idx) =>
+    '<button type="button" class="country-option' + (idx === countryActiveIndex ? " active" : "") + '" role="option" data-code="' + esc(country.code) + '">' +
+    '<span class="country-flag">' + esc(country.flag) + '</span>' +
+    '<span class="country-name">' + esc(country.name) + '</span>' +
+    '<span class="country-code">' + esc(country.code) + '</span>' +
+    '</button>'
+  ).join("");
+}
+
+function updateCountryActiveOption() {
+  const options = document.getElementById("country-options");
+  if (!options) return;
+  options.querySelectorAll(".country-option").forEach((option, idx) => {
+    option.classList.toggle("active", idx === countryActiveIndex);
+  });
+}
+
+function selectCountry(code) {
+  const country = COUNTRIES.find(item => item.code === code);
+  const input = document.getElementById("s2_countrySearch");
+  const hidden = document.getElementById("s2_countryCode");
+  if (!country || !input || !hidden) return;
+  input.value = countryLabel(country);
+  hidden.value = country.code;
+  setCountryOptionsOpen(false);
+}
+
+function syncTypedCountry() {
+  const input = document.getElementById("s2_countrySearch");
+  const hidden = document.getElementById("s2_countryCode");
+  if (!input || !hidden) return;
+  const value = input.value.trim();
+  if (!value) {
+    hidden.value = "";
+    return;
+  }
+  const upper = value.toUpperCase();
+  const exact = COUNTRIES.find(country =>
+    country.code === upper ||
+    country.name.toLowerCase() === value.toLowerCase() ||
+    countryLabel(country).toLowerCase() === value.toLowerCase()
+  );
+  if (exact) {
+    selectCountry(exact.code);
+  } else if (/^[A-Z]{2}$/.test(upper)) {
+    hidden.value = upper;
+  } else {
+    hidden.value = "";
+  }
+}
+
+function getCountryCodeValue() {
+  syncTypedCountry();
+  const hidden = document.getElementById("s2_countryCode");
+  const typed = countrySearchValue().toUpperCase();
+  return (hidden && hidden.value) || (/^[A-Z]{2}$/.test(typed) ? typed : typed);
+}
+
+function initCountryPicker() {
+  const input = document.getElementById("s2_countrySearch");
+  const toggle = document.getElementById("country-toggle");
+  const options = document.getElementById("country-options");
+  const combo = document.getElementById("country-combobox");
+  if (!input || !toggle || !options || !combo) return;
+
+  input.addEventListener("focus", () => {
+    renderCountryOptions(input.value);
+    setCountryOptionsOpen(true);
+  });
+  input.addEventListener("input", () => {
+    const hidden = document.getElementById("s2_countryCode");
+    if (hidden) hidden.value = "";
+    renderCountryOptions(input.value);
+    setCountryOptionsOpen(true);
+  });
+  input.addEventListener("keydown", event => {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      renderCountryOptions(input.value);
+      setCountryOptionsOpen(true);
+      countryActiveIndex = Math.min(countryActiveIndex + 1, countryMatches.length - 1);
+      updateCountryActiveOption();
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      countryActiveIndex = Math.max(countryActiveIndex - 1, 0);
+      updateCountryActiveOption();
+    } else if (event.key === "Enter" && countryActiveIndex >= 0 && countryMatches[countryActiveIndex]) {
+      event.preventDefault();
+      selectCountry(countryMatches[countryActiveIndex].code);
+    } else if (event.key === "Escape") {
+      setCountryOptionsOpen(false);
+    }
+  });
+  input.addEventListener("blur", () => {
+    setTimeout(syncTypedCountry, 120);
+  });
+  toggle.addEventListener("click", () => {
+    renderCountryOptions(input.value);
+    setCountryOptionsOpen(!options.classList.contains("open"));
+    input.focus();
+  });
+  options.addEventListener("mousedown", event => {
+    const option = event.target.closest(".country-option");
+    if (!option) return;
+    event.preventDefault();
+    selectCountry(option.dataset.code);
+  });
+  document.addEventListener("mousedown", event => {
+    if (!combo.contains(event.target)) setCountryOptionsOpen(false);
+  });
+}
+
+function setSummaryValue(id, text, state) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = text;
+  el.className = "summary-value " + (state || "pending");
+}
+
+function updateSummary() {
+  const env = fedexEnvironment();
+  setSummaryValue("summary-environment", env === "sandbox" ? "Sandbox" : "Production", "ready");
+  setSummaryValue("summary-lock", environmentLocked ? "Locked" : "Selectable", environmentLocked ? "error" : "pending");
+  setSummaryValue("summary-bearer", bearerToken ? "Received" : "Not requested", bearerToken ? "complete" : "pending");
+  setSummaryValue("summary-account-auth", accountAuthToken ? "Received" : (bearerToken ? "Waiting" : "Waiting"), accountAuthToken ? "complete" : "pending");
+
+  const step3Num = document.getElementById("num-3");
+  const step3Complete = step3Num && step3Num.classList.contains("done");
+  if (step3Complete) {
+    setSummaryValue("summary-validation", "Complete", "complete");
+  } else if (accountAuthToken) {
+    setSummaryValue("summary-validation", validationMode === "invoice" ? "Invoice ready" : "PIN ready", "ready");
+  } else {
+    setSummaryValue("summary-validation", validationMode === "invoice" ? "Invoice" : "PIN", "pending");
+  }
+}
+
+function resultPanel(type, title, body, value) {
+  const isError = type === "error";
+  const icon = isError ? "ti-alert-triangle" : "ti-circle-check";
+  return '<div class="result-panel ' + esc(type) + '">' +
+    '<div class="result-panel-title"><i class="ti ' + icon + '"></i> ' + esc(title) + "</div>" +
+    '<div class="result-panel-body">' + esc(body) + "</div>" +
+    (value ? '<div class="result-panel-value">' + esc(value) + "</div>" : "") +
+    "</div>";
+}
+
 function showInlineMessage(id, type, message) {
   const target = document.getElementById(id);
   if (!target) return;
   const isError = type === "error";
-  target.innerHTML =
-    '<div class="result-mini">' +
-    '<div class="result-mini-label" style="color:' + (isError ? '#A32D2D' : '#3B6D11') + '">' +
-    '<i class="ti ' + (isError ? 'ti-alert-triangle' : 'ti-info-circle') + '"></i> ' + esc(isError ? "Action needed" : "Notice") +
-    "</div>" +
-    '<div class="result-mini-note" style="color:' + (isError ? '#7A1F1F' : '#555') + '">' + esc(message) + "</div>" +
-    "</div>";
+  target.innerHTML = resultPanel(type, isError ? "Action needed" : "Notice", message);
 }
 
 function setLoading(n, loading, suffix = "") {
@@ -533,14 +873,85 @@ function setLoading(n, loading, suffix = "") {
   if (!btn) return;
   const idleLabel = btn.dataset.label || "Send request";
   const loadingLabel = btn.dataset.loadingLabel || "Sending…";
+  const card = btn.closest(".step-card");
   btn.disabled = loading;
+  btn.classList.toggle("is-loading", loading);
+  if (card) card.classList.toggle("loading", loading);
   btn.innerHTML = loading
     ? '<i class="ti ti-loader"></i> ' + esc(loadingLabel)
     : '<i class="ti ti-send"></i> ' + esc(idleLabel);
 }
 
+function clearResultAreas() {
+  ["result-1", "result-2", "result-3", "result-3-pin", "result-3-pin-validate"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = "";
+  });
+}
+
+function resetTokenDisplays() {
+  [
+    ["s2_bearer_display", "Populated after step 1 completes"],
+    ["s3_bearer_display", "Populated after step 1 completes"],
+    ["s3_authtoken_display", "Populated after step 2 completes"]
+  ].forEach(([id, text]) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.textContent = text;
+      el.className = "auto-box-val";
+    }
+  });
+}
+
+function startOver() {
+  bearerToken = "";
+  accountAuthToken = "";
+  setEnvironmentLocked(false);
+  clearResultAreas();
+  resetTokenDisplays();
+  slideCompletion.fill(false);
+  openSteps = { 1: true, 2: false, 3: false };
+  currentSlide = 0;
+  document.querySelectorAll(".step-card.loading").forEach(card => card.classList.remove("loading"));
+  document.querySelectorAll(".send-btn.is-loading").forEach(btn => {
+    const idleLabel = btn.dataset.label || "Send request";
+    btn.classList.remove("is-loading");
+    btn.innerHTML = '<i class="ti ti-send"></i> ' + esc(idleLabel);
+  });
+
+  [1, 2, 3].forEach(n => {
+    const body = document.getElementById("body-" + n);
+    const chev = document.getElementById("chev-" + n);
+    if (body) body.style.display = n === 1 ? "block" : "none";
+    if (chev) chev.classList.toggle("open", n === 1);
+  });
+
+  const pinInput = document.getElementById("pin-secure-code");
+  if (pinInput) pinInput.value = "";
+  const btn1 = document.getElementById("btn-1");
+  const btn2 = document.getElementById("btn-2");
+  const btn3 = document.getElementById("btn-3");
+  const pinBtn = document.getElementById("btn-3-pin");
+  const pinValidateBtn = document.getElementById("btn-3-pin-validate");
+  if (btn1) btn1.disabled = false;
+  if (btn2) btn2.disabled = true;
+  if (btn3) btn3.disabled = true;
+  if (pinBtn) pinBtn.disabled = true;
+  if (pinValidateBtn) pinValidateBtn.disabled = true;
+
+  setStepState(1, "ready", "Start here");
+  setStepState(2, "locked", "Waiting for step 1");
+  setStepState(3, "locked", "Waiting for step 2");
+  setValidationMode("invoice");
+  updateCarousel();
+  updateSummary();
+}
+
 async function runStep1() {
   setEnvironmentLocked(true);
+  bearerToken = "";
+  accountAuthToken = "";
+  resetTokenDisplays();
   resetSlide(0);
   resetSlide(1);
   resetSlide(2);
@@ -584,9 +995,12 @@ async function runStep1() {
     try { parsed = JSON.parse(text); } catch { parsed = null; }
     if (res.ok && parsed && parsed.access_token) {
       bearerToken = parsed.access_token;
-      document.getElementById("result-1").innerHTML =
-        '<div class="result-mini"><div class="result-mini-label"><i class="ti ti-check"></i> Bearer token received</div>' +
-        '<div class="result-mini-val">' + mask(bearerToken) + "</div></div>";
+      document.getElementById("result-1").innerHTML = resultPanel(
+        "success",
+        "Bearer token received",
+        "The parent bearer token is ready and will be used automatically in the next step.",
+        mask(bearerToken)
+      );
       setStepState(1, "complete", "Complete");
       unlockStep2();
       markSlideComplete(0, true);
@@ -621,6 +1035,12 @@ function unlockStep2() {
 }
 
 async function runStep2() {
+  accountAuthToken = "";
+  const authDisplay = document.getElementById("s3_authtoken_display");
+  if (authDisplay) {
+    authDisplay.textContent = "Populated after step 2 completes";
+    authDisplay.className = "auto-box-val";
+  }
   resetSlide(1);
   resetSlide(2);
   setStepState(2, "running", "Request in progress…");
@@ -650,7 +1070,7 @@ async function runStep2() {
       city: document.getElementById("s2_city").value,
       stateOrProvinceCode: document.getElementById("s2_state").value,
       postalCode: document.getElementById("s2_postalCode").value,
-      countryCode: document.getElementById("s2_countryCode").value,
+      countryCode: getCountryCodeValue(),
       residential: document.getElementById("s2_residential").value === "true"
     },
     accountNumber: { value: document.getElementById("s2_accountNumber").value }
@@ -673,14 +1093,17 @@ async function runStep2() {
     if (res.ok && tok) {
       accountAuthToken = tok;
       const mfaInfo = parsed && parsed.output && Array.isArray(parsed.output.mfaOptions) && parsed.output.mfaOptions[0];
-      let extra = "";
+      let detail = "The account auth token is ready and will be used automatically for validation.";
       if (mfaInfo && mfaInfo.mfaRequired) {
         const methods = mfaInfo.options ? Object.entries(mfaInfo.options).map(([k, v]) => k + ": " + (Array.isArray(v) ? v.join(", ") : v)).join(" | ") : "";
-        extra = '<div class="result-mini-note">MFA required — options: ' + esc(methods || "See response") + "</div>";
+        detail += " MFA is required. Options: " + (methods || "see response");
       }
-      document.getElementById("result-2").innerHTML =
-        '<div class="result-mini"><div class="result-mini-label"><i class="ti ti-check"></i> accountAuthToken received</div>' +
-        '<div class="result-mini-val">' + mask(accountAuthToken) + "</div>" + extra + "</div>";
+      document.getElementById("result-2").innerHTML = resultPanel(
+        "success",
+        "accountAuthToken received",
+        detail,
+        mask(accountAuthToken)
+      );
       setStepState(2, "complete", "Complete");
       unlockStep3();
       markSlideComplete(1, true);
@@ -828,12 +1251,15 @@ async function runPinGeneration() {
     if (res.ok) {
       const pinVal = parsed && (parsed.pin || (parsed.output && (parsed.output.pin || parsed.output.generatedPin || parsed.output.pinValue)));
       const noteParts = [];
-      if (parsed && parsed.transactionId) noteParts.push("Transaction: " + esc(parsed.transactionId));
-      if (parsed && parsed.output && parsed.output.expirationDate) noteParts.push("Expires: " + esc(parsed.output.expirationDate));
-      const notes = noteParts.length ? '<div class="result-mini-note">' + noteParts.join(" · ") + "</div>" : "";
-      document.getElementById("result-3-pin").innerHTML =
-        '<div class="result-mini"><div class="result-mini-label"><i class="ti ti-check"></i> PIN ' + esc(option) + " requested</div>" +
-        '<div class="result-mini-val">' + esc(pinVal || "See response for details") + "</div>" + notes + "</div>";
+      if (parsed && parsed.transactionId) noteParts.push("Transaction: " + parsed.transactionId);
+      if (parsed && parsed.output && parsed.output.expirationDate) noteParts.push("Expires: " + parsed.output.expirationDate);
+      const detail = "FedEx has started the " + option + " PIN flow." + (noteParts.length ? " " + noteParts.join(" · ") : "");
+      document.getElementById("result-3-pin").innerHTML = resultPanel(
+        "success",
+        "PIN requested",
+        detail,
+        pinVal || "Enter the PIN received from FedEx below."
+      );
       setStepState(3, "ready", "PIN generated — enter secure code");
       const pinInput = document.getElementById("pin-secure-code");
       if (pinInput) {
@@ -929,6 +1355,7 @@ function copyVal(id, btn) {
 }
 
 initIndicators();
+initCountryPicker();
 setStepState(1, "ready", "Start here");
 setStepState(2, "locked", "Waiting for step 1");
 setStepState(3, "locked", "Waiting for step 2");
