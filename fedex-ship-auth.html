@@ -94,12 +94,6 @@
   .pin-option input { accent-color: #0C447C; }
   .pin-option:hover { border-color: #0C447C; }
 
-  /* Views */
-  .view-tabs { display: flex; gap: 10px; padding: 0 24px; margin: 18px 0 10px; }
-  .view-tab { padding: 9px 16px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.12); background: #f5f5f3; color: #0C447C; font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.2s, border-color 0.2s; display: inline-flex; align-items: center; gap: 6px; }
-  .view-tab:hover { border-color: #0C447C; }
-  .view-tab.active { background: #0C447C; color: #fff; border-color: #0C447C; }
-
   /* Carousel */
   .carousel { position: relative; overflow: hidden; margin: 0 24px 16px; border-radius: 12px; }
   .carousel-track { display: flex; transition: transform 0.35s ease; }
@@ -114,16 +108,6 @@
   .slide { display: none; transition: opacity 0.25s ease; }
   .slide.active-slide { display: block; }
   .carousel-progress { font-size: 12px; color: #555; letter-spacing: 0.02em; }
-
-  /* Logs */
-  .logs-container { padding: 0 24px 32px; }
-  .logs-list { display: flex; flex-direction: column; gap: 10px; }
-  .log-entry { border: 1px solid rgba(0,0,0,0.08); border-radius: 8px; background: #fff; padding: 12px 14px; }
-  .log-entry-header { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #0C447C; margin-bottom: 6px; }
-  .log-entry-body { font-family: 'Courier New', monospace; font-size: 11px; white-space: pre-wrap; word-break: break-word; color: #1a1a18; }
-  .log-tags { display: inline-flex; gap: 6px; margin-left: auto; }
-  .log-tag { font-size: 10px; padding: 2px 6px; border-radius: 999px; background: #f5f5f3; color: #555; text-transform: uppercase; letter-spacing: 0.04em; }
-  .logs-empty { padding: 20px; text-align: center; font-size: 12px; color: #777; background: #f5f5f3; border-radius: 8px; border: 1px dashed rgba(0,0,0,0.1); }
 
   /* Output card */
   .output-card { background: #EAF3DE; border: 1px solid #C0DD97; border-radius: 12px; padding: 1rem 1.1rem; margin-top: 12px; }
@@ -166,11 +150,6 @@
     <button type="button" class="env-pill" id="pill-production" onclick="setEnvironment('production')"><i class="ti ti-building"></i> Production</button>
   </div>
   <span class="env-badge env-sandbox" id="env-badge">Sandbox</span>
-</div>
-
-<div class="view-tabs">
-  <button type="button" class="view-tab active" id="tab-workflow" onclick="switchView('workflow')"><i class="ti ti-rocket"></i> Workflow</button>
-  <button type="button" class="view-tab" id="tab-logs" onclick="switchView('logs')"><i class="ti ti-clipboard-list"></i> Logs</button>
 </div>
 
 <div id="workflow-view">
@@ -291,29 +270,12 @@
 <div class="carousel-indicators" id="carousel-indicators"></div>
 </div>
 
-<div id="logs-view" style="display:none;">
-  <div class="logs-container">
-    <div class="view-tabs" style="padding:0; margin-bottom:12px; display:flex; gap:10px;">
-      <label class="pin-option" style="padding:6px 10px; cursor:pointer;">
-        <input type="checkbox" name="log-filter" value="request" checked>Requests
-      </label>
-      <label class="pin-option" style="padding:6px 10px; cursor:pointer;">
-        <input type="checkbox" name="log-filter" value="response" checked>Responses
-      </label>
-      <button type="button" class="carousel-btn" style="margin-left:auto;" onclick="clearLogs()"><i class="ti ti-trash"></i> Clear</button>
-    </div>
-    <div id="logs-list" class="logs-empty">No activity yet.</div>
-  </div>
-</div>
-
 <script>
 let bearerToken = "", accountAuthToken = "", domain = "https://apis-sandbox.fedex.com";
 let environmentLocked = false;
 let openSteps = { 1: true, 2: false, 3: false };
 let validationMode = "invoice";
 const isFileOrigin = window.location.protocol === "file:";
-const stepTitles = ["Parent bearer token", "Child address validation", "Validation options"];
-const logs = [];
 const slides = Array.from(document.querySelectorAll(".slide"));
 const slideCompletion = slides.length ? Array(slides.length).fill(false) : [];
 let currentSlide = slides.findIndex(slide => slide.classList.contains("active-slide"));
@@ -343,40 +305,14 @@ async function sendRequest(url, options) {
     throw new Error("This page must be served from the Node helper at http://localhost:8010/");
   }
   const targetPath = serverPathFor(url);
-  const targetAbsolute = window.location.origin + targetPath;
   const opts = Object.assign({}, options || {});
-  const rawBody = Object.prototype.hasOwnProperty.call(options || {}, "rawBody") ? options.rawBody : opts.body;
-  if (Object.prototype.hasOwnProperty.call(opts, "rawBody")) delete opts.rawBody;
   opts.headers = Object.assign({}, opts.headers, { "x-fedex-environment": fedexEnvironment() });
-  const requestInfo = {
-    originalUrl: url,
-    serverUrl: targetAbsolute,
-    method: (opts.method || "GET").toUpperCase(),
-    headers: Object.assign({}, opts.headers),
-    body: opts.body,
-    displayBody: rawBody
-  };
   try {
-    const response = await fetch(targetPath, opts);
-    response._fedexServerTarget = targetAbsolute;
-    response._fedexRequestInfo = requestInfo;
-    return response;
+    return await fetch(targetPath, opts);
   } catch (err) {
     const error = new Error(err && err.message ? err.message : "Failed to fetch");
-    error.target = targetAbsolute;
-    error.requestInfo = requestInfo;
     throw error;
   }
-}
-
-function formatNetworkError(err, url) {
-  const fallback = window.location.origin + serverPathFor(url);
-  const target = (err && err.target) ? err.target : fallback;
-  const message = err && err.message ? err.message : "Failed to fetch";
-  const extra = isFileOrigin
-    ? "\nTip: Open http://localhost:8010/ instead of loading the HTML from disk."
-    : "\nTip: Ensure the Node server is running.";
-  return "Network error: " + message + "\nTarget: " + target + extra;
 }
 
 function updateDomain(v) {
@@ -476,84 +412,12 @@ function markSlideComplete(idx, autoAdvance = false) {
   }
 }
 
-function isWorkflowVisible() {
-  const view = document.getElementById("workflow-view");
-  return view && view.style.display !== "none";
-}
-
-function getStepContext(step, suffix) {
-  if (step === 3) {
-    if (suffix === "-pin") return "PIN generation";
-    if (suffix === "-pin-validate") return "PIN validation";
-    return "Invoice validation";
-  }
-  return stepTitles[step - 1] || "Step " + step;
-}
-
-function addLog(entry) {
-  logs.push(Object.assign({ timestamp: new Date() }, entry));
-  if (logs.length > 300) logs.shift();
-  renderLogs();
-}
-
-function clearLogs() {
-  logs.length = 0;
-  renderLogs();
-}
-
 function setEnvironment(env) {
   if (environmentLocked) return;
   const url = env === "production" ? "https://apis.fedex.com" : "https://apis-sandbox.fedex.com";
   const input = document.getElementById("domain-input");
   if (input) input.value = url;
   updateDomain(url);
-}
-
-function renderLogs() {
-  const container = document.getElementById("logs-list");
-  if (!container) return;
-  if (!logs.length) {
-    container.className = "logs-empty";
-    container.textContent = "No activity yet.";
-    return;
-  }
-  const filterInputs = Array.from(document.querySelectorAll('input[name="log-filter"]'));
-  const activeKinds = filterInputs.filter(el => el.checked).map(el => el.value);
-  if (!activeKinds.length) {
-    container.className = "logs-empty";
-    container.textContent = "Enable at least one filter to see log entries.";
-    return;
-  }
-  const filtered = logs.filter(log => activeKinds.includes(log.kind));
-  if (!filtered.length) {
-    container.className = "logs-empty";
-    container.textContent = "No entries match the current filter.";
-    return;
-  }
-  container.className = "logs-list";
-  container.innerHTML = filtered.map(log => {
-    const time = log.timestamp.toLocaleTimeString();
-    const context = getStepContext(log.step, log.suffix || "");
-    const direction = log.kind === "request" ? "Request" : "Response";
-    const tags = [
-      `<span class="log-tag">${esc(direction)}</span>`,
-      `<span class="log-tag">Step ${log.step}</span>`,
-      `<span class="log-tag">${esc(context)}</span>`
-    ];
-    if (log.kind === "request" && log.method) tags.push(`<span class="log-tag">${esc(log.method)}</span>`);
-    if (log.kind === "response" && typeof log.status !== "undefined") {
-      tags.push(`<span class="log-tag">${esc(String(log.status))}${log.ok ? " OK" : " ERR"}</span>`);
-    }
-    const headerHtml = `<div class="log-entry-header"><strong>${esc(time)}</strong><span>${esc(log.url || "")}</span><span class="log-tags">${tags.join("")}</span></div>`;
-    const pieces = [];
-    if (log.kind === "request" && log.serverUrl && log.serverUrl !== log.url) {
-      pieces.push("Server target:\n" + log.serverUrl);
-    }
-    if (log.kind === "request" && log.headers) pieces.push("Headers:\n" + log.headers);
-    if (log.body) pieces.push(log.kind === "request" ? "Body:\n" + log.body : log.body);
-    const bodyText = pieces.length ? pieces.join("\n\n") : "(empty)";
-    return `<div class="log-entry">${headerHtml}<div class="log-entry-body">${esc(bodyText)}</div></div>`;
-  }).join("");
 }
 
 function initIndicators() {
@@ -593,8 +457,8 @@ function updateCarousel() {
   }
   if (nextBtn) {
     if (currentSlide === slides.length - 1) {
-      nextBtn.innerHTML = '<i class="ti ti-notes"></i> View logs';
-      nextBtn.disabled = !canAdvance;
+      nextBtn.innerHTML = '<i class="ti ti-check"></i> Complete';
+      nextBtn.disabled = true;
     } else if (canAdvance) {
       nextBtn.innerHTML = 'Next <i class="ti ti-arrow-right"></i>';
       nextBtn.disabled = false;
@@ -625,23 +489,6 @@ function prevSlide() {
   if (currentSlide > 0) goToSlide(currentSlide - 1);
 }
 
-function switchView(view) {
-  const workflowView = document.getElementById("workflow-view");
-  const logsView = document.getElementById("logs-view");
-  const workflowTab = document.getElementById("tab-workflow");
-  const logsTab = document.getElementById("tab-logs");
-  const showWorkflow = view !== "logs";
-  if (workflowView) workflowView.style.display = showWorkflow ? "block" : "none";
-  if (logsView) logsView.style.display = showWorkflow ? "none" : "block";
-  if (workflowTab) workflowTab.classList.toggle("active", showWorkflow);
-  if (logsTab) logsTab.classList.toggle("active", !showWorkflow);
-  if (showWorkflow) {
-    updateCarousel();
-  } else {
-    renderLogs();
-  }
-}
-
 function setValidationMode(mode) {
   validationMode = mode;
   const invoiceBtn = document.getElementById("mode-invoice-btn");
@@ -668,42 +515,17 @@ function mask(t) {
   return t.slice(0, 6) + "••••••••" + t.slice(-4);
 }
 
-function showResp(n, status, ok, body, target, suffix = "") {
-  addLog({
-    kind: "response",
-    step: n,
-    suffix,
-    status,
-    ok,
-    url: target || "",
-    body: typeof body === "string" ? body : String(body || "")
-  });
-}
-
-function showRequest(n, info, suffix = "") {
-  if (!info) return;
-  const headers = info.headers || {};
-  const headerLines = Object.keys(headers).length
-    ? Object.entries(headers).map(([k, v]) => k + ": " + v).join("\n")
-    : "";
-  let bodyText = "";
-  if (typeof info.displayBody === "string") {
-    bodyText = info.displayBody;
-  } else if (info.displayBody) {
-    try { bodyText = JSON.stringify(info.displayBody, null, 2); } catch { bodyText = String(info.displayBody); }
-  } else if (typeof info.body === "string") {
-    bodyText = info.body;
-  }
-  addLog({
-    kind: "request",
-    step: n,
-    suffix,
-    method: info.method || "GET",
-    url: info.originalUrl || info.serverUrl || "",
-    serverUrl: info.serverUrl || "",
-    headers: headerLines,
-    body: typeof bodyText === "string" ? bodyText : String(bodyText || "")
-  });
+function showInlineMessage(id, type, message) {
+  const target = document.getElementById(id);
+  if (!target) return;
+  const isError = type === "error";
+  target.innerHTML =
+    '<div class="result-mini">' +
+    '<div class="result-mini-label" style="color:' + (isError ? '#A32D2D' : '#3B6D11') + '">' +
+    '<i class="ti ' + (isError ? 'ti-alert-triangle' : 'ti-info-circle') + '"></i> ' + esc(isError ? "Action needed" : "Notice") +
+    "</div>" +
+    '<div class="result-mini-note" style="color:' + (isError ? '#7A1F1F' : '#555') + '">' + esc(message) + "</div>" +
+    "</div>";
 }
 
 function setLoading(n, loading, suffix = "") {
@@ -751,21 +573,15 @@ async function runStep1() {
     grant_type: "client_credentials"
   });
   const bodySend = body.toString();
-  const bodyDisplay = Array.from(body.entries()).map(([k, v]) => k + "=" + v).join("\n");
-  showRequest(1, null);
   try {
     const res = await sendRequest(url, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: bodySend,
-      rawBody: bodyDisplay
+      body: bodySend
     });
     const text = await res.text();
-    let pretty, parsed;
-    try { parsed = JSON.parse(text); pretty = JSON.stringify(parsed, null, 2); } catch { pretty = text; }
-    showRequest(1, res._fedexRequestInfo);
-    const via = res._fedexServerTarget && res._fedexServerTarget !== url ? res._fedexServerTarget : null;
-    showResp(1, res.status, res.ok, pretty, via);
+    let parsed;
+    try { parsed = JSON.parse(text); } catch { parsed = null; }
     if (res.ok && parsed && parsed.access_token) {
       bearerToken = parsed.access_token;
       document.getElementById("result-1").innerHTML =
@@ -775,15 +591,14 @@ async function runStep1() {
       unlockStep2();
       markSlideComplete(0, true);
     } else {
-      setStepState(1, "error", "Unexpected response — see logs");
+      showInlineMessage("result-1", "error", "FedEx did not return a bearer token. Check the credentials and environment, then try again.");
+      setStepState(1, "error", "Unexpected response");
       setStepState(2, "locked", "Waiting for step 1");
       setStepState(3, "locked", "Waiting for step 2");
     }
   } catch (e) {
-    showRequest(1, e.requestInfo);
-    const viaErr = e.requestInfo && e.requestInfo.serverUrl && e.requestInfo.serverUrl !== url ? e.requestInfo.serverUrl : null;
-    showResp(1, 0, false, formatNetworkError(e, url), viaErr);
-    setStepState(1, "error", "Error — see logs");
+    showInlineMessage("result-1", "error", "The bearer token request failed. Check the connection and try again.");
+    setStepState(1, "error", "Request failed");
     setStepState(2, "locked", "Waiting for step 1");
     setStepState(3, "locked", "Waiting for step 2");
   }
@@ -841,21 +656,15 @@ async function runStep2() {
     accountNumber: { value: document.getElementById("s2_accountNumber").value }
   };
   const jsonBody = JSON.stringify(payload);
-  const jsonPretty = JSON.stringify(payload, null, 2);
-  showRequest(2, null);
   try {
     const res = await sendRequest(url, {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": "Bearer " + bearerToken },
-      body: jsonBody,
-      rawBody: jsonPretty
+      body: jsonBody
     });
     const text = await res.text();
-    let pretty, parsed;
-    try { parsed = JSON.parse(text); pretty = JSON.stringify(parsed, null, 2); } catch { pretty = text; }
-    showRequest(2, res._fedexRequestInfo);
-    const via = res._fedexServerTarget && res._fedexServerTarget !== url ? res._fedexServerTarget : null;
-    showResp(2, res.status, res.ok, pretty, via);
+    let parsed;
+    try { parsed = JSON.parse(text); } catch { parsed = null; }
     const tok = parsed && (
       parsed.accountAuthToken ||
       (parsed.output && parsed.output.accountAuthToken) ||
@@ -876,7 +685,8 @@ async function runStep2() {
       unlockStep3();
       markSlideComplete(1, true);
     } else {
-      setStepState(2, "error", "Unexpected response — see logs");
+      showInlineMessage("result-2", "error", "FedEx did not return an account auth token. Check the customer details and try again.");
+      setStepState(2, "error", "Unexpected response");
       setStepState(3, "locked", "Waiting for step 2");
       const btn3Retry = document.getElementById("btn-3");
       if (btn3Retry) btn3Retry.disabled = true;
@@ -886,10 +696,8 @@ async function runStep2() {
       if (pinValidateRetry) pinValidateRetry.disabled = true;
     }
   } catch (e) {
-    showRequest(2, e.requestInfo);
-    const viaErr = e.requestInfo && e.requestInfo.serverUrl && e.requestInfo.serverUrl !== url ? e.requestInfo.serverUrl : null;
-    showResp(2, 0, false, formatNetworkError(e, url), viaErr);
-    setStepState(2, "error", "Error — see logs");
+    showInlineMessage("result-2", "error", "The address validation request failed. Check the connection and try again.");
+    setStepState(2, "error", "Request failed");
     setStepState(3, "locked", "Waiting for step 2");
   }
   setLoading(2, false);
@@ -939,8 +747,6 @@ async function runInvoiceValidation() {
     locale: "en_US"
   };
   const jsonBody = JSON.stringify(payload);
-  const jsonPretty = JSON.stringify(payload, null, 2);
-  showRequest(3, null);
   const resultInvoice = document.getElementById("result-3");
   if (resultInvoice) resultInvoice.innerHTML = "";
   try {
@@ -951,15 +757,11 @@ async function runInvoiceValidation() {
         "Authorization": "Bearer " + bearerToken,
         "accountAuthToken": accountAuthToken
       },
-      body: jsonBody,
-      rawBody: jsonPretty
+      body: jsonBody
     });
     const text = await res.text();
-    let pretty, parsed;
-    try { parsed = JSON.parse(text); pretty = JSON.stringify(parsed, null, 2); } catch { pretty = text; }
-    showRequest(3, res._fedexRequestInfo);
-    const via = res._fedexServerTarget && res._fedexServerTarget !== url ? res._fedexServerTarget : null;
-    showResp(3, res.status, res.ok, pretty, via);
+    let parsed;
+    try { parsed = JSON.parse(text); } catch { parsed = null; }
     const ck = parsed && (
       parsed.child_key ||
       parsed.childKey ||
@@ -981,18 +783,18 @@ async function runInvoiceValidation() {
         '<div class="output-row"><div class="output-key">Child secret</div><div class="output-val" id="out-cs">' + esc(cs || "—") + '</div>' +
         '<button class="copy-btn" onclick="copyVal(\'out-cs\',this)"><i class="ti ti-copy"></i> Copy</button></div>' +
         "</div>";
-      setStepState(3, "complete", "Complete — view logs for details");
+      setStepState(3, "complete", "Complete");
       markSlideComplete(2, false);
     } else if (!res.ok) {
-      setStepState(3, "error", "Error — see logs");
+      showInlineMessage("result-3", "error", "Invoice validation failed. Check the invoice details and try again.");
+      setStepState(3, "error", "Request failed");
     } else {
-      setStepState(3, "error", "Unexpected response — see logs");
+      showInlineMessage("result-3", "error", "FedEx did not return child credentials. Check the invoice details and try again.");
+      setStepState(3, "error", "Unexpected response");
     }
   } catch (e) {
-    showRequest(3, e.requestInfo);
-    const viaErr = e.requestInfo && e.requestInfo.serverUrl && e.requestInfo.serverUrl !== url ? e.requestInfo.serverUrl : null;
-    showResp(3, 0, false, formatNetworkError(e, url), viaErr);
-    setStepState(3, "error", "Error — see logs");
+    showInlineMessage("result-3", "error", "The invoice validation request failed. Check the connection and try again.");
+    setStepState(3, "error", "Request failed");
   }
   setLoading(3, false);
 }
@@ -1006,8 +808,6 @@ async function runPinGeneration() {
   const option = optionInput ? optionInput.value : "SMS";
   const payload = { locale: "en_US", option };
   const jsonBody = JSON.stringify(payload);
-  const jsonPretty = JSON.stringify(payload, null, 2);
-  showRequest(3, null, "-pin");
   const resultPin = document.getElementById("result-3-pin");
   if (resultPin) resultPin.innerHTML = "";
   const validateBtnOff = document.getElementById("btn-3-pin-validate");
@@ -1020,15 +820,11 @@ async function runPinGeneration() {
         "Authorization": "Bearer " + bearerToken,
         "accountAuthToken": accountAuthToken
       },
-      body: jsonBody,
-      rawBody: jsonPretty
+      body: jsonBody
     });
     const text = await res.text();
-    let pretty, parsed;
-    try { parsed = JSON.parse(text); pretty = JSON.stringify(parsed, null, 2); } catch { pretty = text; }
-    showRequest(3, res._fedexRequestInfo, "-pin");
-    const via = res._fedexServerTarget && res._fedexServerTarget !== url ? res._fedexServerTarget : null;
-    showResp(3, res.status, res.ok, pretty, via, "-pin");
+    let parsed;
+    try { parsed = JSON.parse(text); } catch { parsed = null; }
     if (res.ok) {
       const pinVal = parsed && (parsed.pin || (parsed.output && (parsed.output.pin || parsed.output.generatedPin || parsed.output.pinValue)));
       const noteParts = [];
@@ -1047,13 +843,12 @@ async function runPinGeneration() {
       const pinValidateBtn = document.getElementById("btn-3-pin-validate");
       if (pinValidateBtn) pinValidateBtn.disabled = false;
     } else {
-      setStepState(3, "error", "Error — see logs");
+      showInlineMessage("result-3-pin", "error", "PIN generation failed. Check the selected delivery option and try again.");
+      setStepState(3, "error", "Request failed");
     }
   } catch (e) {
-    showRequest(3, e.requestInfo, "-pin");
-    const viaErr = e.requestInfo && e.requestInfo.serverUrl && e.requestInfo.serverUrl !== url ? e.requestInfo.serverUrl : null;
-    showResp(3, 0, false, formatNetworkError(e, url), viaErr, "-pin");
-    setStepState(3, "error", "Error — see logs");
+    showInlineMessage("result-3-pin", "error", "The PIN generation request failed. Check the connection and try again.");
+    setStepState(3, "error", "Request failed");
   }
   setLoading(3, false, "-pin");
 }
@@ -1066,7 +861,7 @@ async function runPinValidation() {
   const pinValue = document.getElementById("pin-secure-code").value.trim();
   if (!pinValue) {
     setLoading(3, false, "-pin-validate");
-    showResp(3, 0, false, "Please enter the secure code PIN before validating.", null, "-pin-validate");
+    showInlineMessage("result-3-pin-validate", "error", "Please enter the secure code PIN before validating.");
     setStepState(3, "ready", "Enter the secure code before validating");
     const validateBtn = document.getElementById("btn-3-pin-validate");
     if (validateBtn) validateBtn.disabled = false;
@@ -1074,8 +869,6 @@ async function runPinValidation() {
   }
   const payload = { locale: "en_US", secureCodePin: pinValue };
   const jsonBody = JSON.stringify(payload);
-  const jsonPretty = JSON.stringify(payload, null, 2);
-  showRequest(3, null, "-pin-validate");
   const resultArea = document.getElementById("result-3-pin-validate");
   if (resultArea) resultArea.innerHTML = "";
   try {
@@ -1086,15 +879,11 @@ async function runPinValidation() {
         "Authorization": "Bearer " + bearerToken,
         "accountAuthToken": accountAuthToken
       },
-      body: jsonBody,
-      rawBody: jsonPretty
+      body: jsonBody
     });
     const text = await res.text();
-    let pretty, parsed;
-    try { parsed = JSON.parse(text); pretty = JSON.stringify(parsed, null, 2); } catch { pretty = text; }
-    showRequest(3, res._fedexRequestInfo, "-pin-validate");
-    const via = res._fedexServerTarget && res._fedexServerTarget !== url ? res._fedexServerTarget : null;
-    showResp(3, res.status, res.ok, pretty, via, "-pin-validate");
+    let parsed;
+    try { parsed = JSON.parse(text); } catch { parsed = null; }
     const ck = parsed && (
       parsed.child_key ||
       parsed.childKey ||
@@ -1116,18 +905,18 @@ async function runPinValidation() {
         '<div class="output-row"><div class="output-key">Child secret</div><div class="output-val" id="out-cs-pin">' + esc(cs || "—") + '</div>' +
         '<button class="copy-btn" onclick="copyVal(\'out-cs-pin\',this)"><i class="ti ti-copy"></i> Copy</button></div>' +
         "</div>";
-      setStepState(3, "complete", "Complete — view logs for details");
+      setStepState(3, "complete", "Complete");
       markSlideComplete(2, false);
     } else if (!res.ok) {
-      setStepState(3, "error", "Error — see logs");
+      showInlineMessage("result-3-pin-validate", "error", "PIN validation failed. Check the secure code and try again.");
+      setStepState(3, "error", "Request failed");
     } else {
-      setStepState(3, "error", "Unexpected response — see logs");
+      showInlineMessage("result-3-pin-validate", "error", "FedEx did not return child credentials. Check the secure code and try again.");
+      setStepState(3, "error", "Unexpected response");
     }
   } catch (e) {
-    showRequest(3, e.requestInfo, "-pin-validate");
-    const viaErr = e.requestInfo && e.requestInfo.serverUrl && e.requestInfo.serverUrl !== url ? e.requestInfo.serverUrl : null;
-    showResp(3, 0, false, formatNetworkError(e, url), viaErr, "-pin-validate");
-    setStepState(3, "error", "Error — see logs");
+    showInlineMessage("result-3-pin-validate", "error", "The PIN validation request failed. Check the connection and try again.");
+    setStepState(3, "error", "Request failed");
   }
   setLoading(3, false, "-pin-validate");
 }
@@ -1145,9 +934,6 @@ setStepState(2, "locked", "Waiting for step 1");
 setStepState(3, "locked", "Waiting for step 2");
 setEnvironmentLocked(false);
 updateCarousel();
-renderLogs();
-document.querySelectorAll('input[name="log-filter"]').forEach(cb => cb.addEventListener("change", renderLogs));
-switchView("workflow");
 setValidationMode("invoice");
 </script>
 </body>
