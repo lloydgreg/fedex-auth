@@ -2,6 +2,10 @@
 
 Browser-based helper for walking through the FedEx child credential authorization flow. The repository includes a local Node/Express helper, a Lambda backend handler, and Terraform for hosting a static frontend with S3 + CloudFront and the backend with Lambda + API Gateway.
 
+## Author
+
+Lloyd Gregory
+
 ## Current Architecture
 
 - `fedex-ship-auth.html` is the local static UI.

@@ -1,6 +1,7 @@
 {
   "name": "fedex-auth-helper",
   "version": "1.0.0",
+  "author": "Lloyd Gregory",
   "private": true,
   "type": "module",
   "scripts": {
