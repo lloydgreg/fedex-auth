@@ -1,10 +1,3 @@
-import { readFileSync } from "node:fs";
-import { extname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-
-const __dirname = fileURLToPath(new URL(".", import.meta.url));
-const INDEX_HTML = readFileSync(join(__dirname, "fedex-ship-auth.html"), "utf8");
-const FAVICON = readFileSync(join(__dirname, "favicon.png"));
 const SANDBOX_API_BASE_URL = process.env.FEDEX_SANDBOX_API_BASE_URL || "https://apis-sandbox.fedex.com";
 const PRODUCTION_API_BASE_URL = process.env.FEDEX_PRODUCTION_API_BASE_URL || "https://apis.fedex.com";
 
@@ -19,11 +12,6 @@ const HOP_BY_HOP = new Set([
   "content-length",
   "content-encoding"
 ]);
-
-const MIME_TYPES = {
-  ".html": "text/html; charset=utf-8",
-  ".png": "image/png"
-};
 
 const FEDEX_ROUTES = new Set([
   "/oauth/token",
@@ -134,24 +122,6 @@ async function handleFedexRequest(event) {
   );
 }
 
-function serveStatic(path) {
-  if (path === "/" || path === "/fedex-ship-auth.html") {
-    return response(200, INDEX_HTML, {
-      "content-type": MIME_TYPES[".html"],
-      "cache-control": "no-store"
-    });
-  }
-
-  if (path === "/favicon.png") {
-    return response(200, FAVICON.toString("base64"), {
-      "content-type": MIME_TYPES[extname(path)],
-      "cache-control": "public, max-age=86400"
-    }, true);
-  }
-
-  return json(404, { error: "Not found" });
-}
-
 export async function handler(event) {
   const method = event.requestContext?.http?.method || event.httpMethod || "GET";
   const path = getPath(event);
@@ -164,5 +134,5 @@ export async function handler(event) {
     return handleFedexRequest(event);
   }
 
-  return serveStatic(path);
+  return json(404, { error: "Not found" });
 }

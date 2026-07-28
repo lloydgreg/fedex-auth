@@ -16,6 +16,24 @@ variable "stage_name" {
   default     = "$default"
 }
 
+variable "frontend_bucket_name" {
+  description = "Optional S3 bucket name for the frontend. Leave null to generate one from the project name, account ID, and region."
+  type        = string
+  default     = null
+}
+
+variable "frontend_build_dir" {
+  description = "Path to the static Next.js export directory, relative to the terraform directory."
+  type        = string
+  default     = "../out"
+}
+
+variable "cloudfront_price_class" {
+  description = "CloudFront price class for the frontend distribution."
+  type        = string
+  default     = "PriceClass_100"
+}
+
 variable "lambda_runtime" {
   description = "Node.js runtime for the Lambda function."
   type        = string
@@ -38,6 +56,47 @@ variable "lambda_timeout" {
   description = "Lambda timeout in seconds."
   type        = number
   default     = 30
+}
+
+variable "api_cors_allowed_origins" {
+  description = "Origins allowed to call the backend API Gateway."
+  type        = list(string)
+  default     = ["*"]
+}
+
+variable "api_cors_include_cloudfront_origin" {
+  description = "Whether to automatically include the generated CloudFront URL in API Gateway CORS allowed origins."
+  type        = bool
+  default     = true
+}
+
+variable "api_cors_allowed_methods" {
+  description = "HTTP methods allowed by API Gateway CORS."
+  type        = list(string)
+  default     = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+}
+
+variable "api_cors_allowed_headers" {
+  description = "Headers allowed by API Gateway CORS."
+  type        = list(string)
+  default = [
+    "authorization",
+    "content-type",
+    "accountauthtoken",
+    "x-fedex-environment"
+  ]
+}
+
+variable "api_cors_allow_credentials" {
+  description = "Whether API Gateway CORS allows credentials."
+  type        = bool
+  default     = false
+}
+
+variable "api_cors_max_age" {
+  description = "API Gateway CORS preflight max age in seconds."
+  type        = number
+  default     = 86400
 }
 
 variable "log_retention_days" {
