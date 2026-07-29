@@ -1,16 +1,10 @@
 locals {
-  lambda_source_dir       = "${path.module}/../lambda"
-  lambda_package          = "${path.module}/${var.project_name}.zip"
-  function_name           = "${var.project_name}-app"
-  api_gateway_url         = aws_apigatewayv2_stage.default.invoke_url
-  cloudfront_url          = "https://${aws_cloudfront_distribution.frontend.domain_name}"
-  api_cors_allowed_origins = var.api_cors_include_cloudfront_origin ? distinct(concat(
-    var.api_cors_allowed_origins,
-    [local.cloudfront_url]
-  )) : var.api_cors_allowed_origins
+  lambda_source_dir = "${path.module}/../lambda"
+  lambda_package    = "${path.module}/${var.project_name}.zip"
+  function_name     = "${var.project_name}-app"
+  api_gateway_url   = aws_apigatewayv2_stage.default.invoke_url
+  cloudfront_url    = "https://${aws_cloudfront_distribution.frontend.domain_name}"
 }
-
-data "aws_caller_identity" "current" {}
 
 data "archive_file" "lambda" {
   type        = "zip"
@@ -76,7 +70,7 @@ resource "aws_apigatewayv2_api" "http" {
     allow_credentials = var.api_cors_allow_credentials
     allow_headers     = var.api_cors_allowed_headers
     allow_methods     = var.api_cors_allowed_methods
-    allow_origins     = local.api_cors_allowed_origins
+    allow_origins     = var.api_cors_allowed_origins
     max_age           = var.api_cors_max_age
   }
 }

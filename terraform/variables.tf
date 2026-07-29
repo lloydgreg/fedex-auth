@@ -16,20 +16,8 @@ variable "stage_name" {
   default     = "$default"
 }
 
-variable "frontend_bucket_name" {
-  description = "Optional S3 bucket name for the frontend. Leave null to generate one from the project name, account ID, and region."
-  type        = string
-  default     = null
-}
-
-variable "frontend_build_dir" {
-  description = "Path to the static Next.js export directory, relative to the terraform directory."
-  type        = string
-  default     = "../out"
-}
-
 variable "cloudfront_price_class" {
-  description = "CloudFront price class for the frontend distribution."
+  description = "CloudFront price class for the Lambda-backed frontend distribution."
   type        = string
   default     = "PriceClass_100"
 }
@@ -65,9 +53,9 @@ variable "api_cors_allowed_origins" {
 }
 
 variable "api_cors_include_cloudfront_origin" {
-  description = "Whether to automatically include the generated CloudFront URL in API Gateway CORS allowed origins."
+  description = "Deprecated. CloudFront now uses API Gateway as its origin, so frontend calls are same-origin through CloudFront."
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "api_cors_allowed_methods" {

@@ -6,16 +6,23 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
 const outDir = path.join(rootDir, "out");
+const lambdaStaticDir = path.join(rootDir, "lambda", "static");
 
 const sourceHtml = path.join(rootDir, "fedex-ship-auth.html");
 const sourceFavicon = path.join(rootDir, "favicon.png");
 const outputHtml = path.join(outDir, "index.html");
 const outputFavicon = path.join(outDir, "favicon.png");
+const lambdaOutputHtml = path.join(lambdaStaticDir, "index.html");
+const lambdaOutputFavicon = path.join(lambdaStaticDir, "favicon.png");
 
 await mkdir(outDir, { recursive: true });
+await mkdir(lambdaStaticDir, { recursive: true });
 
 const html = await readFile(sourceHtml, "utf8");
 await writeFile(outputHtml, html, "utf8");
 await copyFile(sourceFavicon, outputFavicon);
+await writeFile(lambdaOutputHtml, html, "utf8");
+await copyFile(sourceFavicon, lambdaOutputFavicon);
 
 console.log(`Built frontend export at ${outDir}`);
+console.log(`Built Lambda static assets at ${lambdaStaticDir}`);

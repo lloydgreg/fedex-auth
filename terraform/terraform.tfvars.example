@@ -1,14 +1,13 @@
 aws_region   = "eu-west-2"
 project_name = "fedex-auth-helper"
 
-frontend_build_dir     = "../out"
 cloudfront_price_class = "PriceClass_100"
 
 fedex_sandbox_api_base_url    = "https://apis-sandbox.fedex.com"
 fedex_production_api_base_url = "https://apis.fedex.com"
 
 api_cors_allowed_origins               = ["*"]
-api_cors_include_cloudfront_origin     = true
+api_cors_include_cloudfront_origin     = false
 
 tags = {
   Project     = "fedex-auth-helper"

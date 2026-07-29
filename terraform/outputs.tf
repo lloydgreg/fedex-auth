@@ -4,13 +4,8 @@ output "api_gateway_url" {
 }
 
 output "frontend_cloudfront_url" {
-  description = "CloudFront URL for the frontend."
+  description = "CloudFront URL for the Lambda-served frontend and backend."
   value       = local.cloudfront_url
-}
-
-output "frontend_s3_bucket" {
-  description = "Private S3 bucket containing the frontend static export."
-  value       = aws_s3_bucket.frontend.bucket
 }
 
 output "cloudfront_distribution_id" {
